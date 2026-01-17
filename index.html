@@ -41,6 +41,13 @@
         .control-btn:hover { background: rgba(80,80,80,0.9); }
         .reset-btn { background: #d32f2f; border-color: #b71c1c; }
         .reset-btn.voted { background: #555; cursor: default; }
+        
+        /* [新增] 房間資訊顯示 */
+        .room-info-badge {
+            background: rgba(41, 182, 246, 0.2); border: 1px solid var(--blue); color: var(--blue);
+            padding: 5px 10px; border-radius: 5px; font-size: 0.9rem; text-align: center; margin-bottom: 5px;
+            font-weight: bold;
+        }
 
         .table-container { position: absolute; top: 55%; left: 50%; transform: translate(-50%, -50%) rotateX(25deg); width: 80vh; height: 80vh; transform-style: preserve-3d; }
         .table-surface { width: 100%; height: 100%; border-radius: 50%; background: radial-gradient(#6d4c41, #3e2723); background-image: repeating-radial-gradient(circle at center, #6d4c41 0, #5d4037 2px, #6d4c41 4px); border: 20px solid #2d1e18; box-shadow: 0 30px 60px rgba(0,0,0,0.8), inset 0 0 100px rgba(0,0,0,0.9); position: relative; display: flex; align-items: center; justify-content: center; }
@@ -96,28 +103,24 @@
         .notepad textarea { width: 100%; height: 100%; background: transparent; border: none; color: #3e2723; resize: none; font-family: 'Noto Sans TC', monospace; outline: none; font-size: 0.9rem; font-weight: bold; }
         .notepad-title { font-size: 0.8rem; color: #5d4037; margin-bottom: 5px; border-bottom: 1px solid #a1887f; font-weight: bold;}
         
-        .card-container { width: 150px; height: 220px; perspective: 1000px; cursor: pointer; position: relative; }
+        .card-container { width: 150px; height: 360px; perspective: 1000px; cursor: pointer; position: relative; }
         .player-name-plate { position: absolute; top: -30px; left: 50%; transform: translateX(-50%); background: var(--gold); color: #000; padding: 2px 10px; border-radius: 4px; font-weight: bold; font-size: 0.9rem; white-space: nowrap; box-shadow: 0 2px 5px black; }
         .card-inner { position: relative; width: 100%; height: 100%; text-align: center; transition: transform 0.6s; transform-style: preserve-3d; }
         .card-container.flipped .card-inner { transform: rotateY(180deg); }
-        .card-front, .card-back { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; border-radius: 12px; border: 2px solid #6d4c41; box-shadow: 0 10px 25px black; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        .card-front { background: #2d1e18 repeating-linear-gradient(45deg, #3e2723 0, #3e2723 10px, #2d1e18 10px, #2d1e18 20px); color: #6d4c41; font-size: 4rem; text-shadow: 1px 1px 0 rgba(255,255,255,0.1); }
-        .card-back { background: linear-gradient(135deg, #fffde7, #fff9c4); color: #333; transform: rotateY(180deg); border: 4px solid var(--gold); }
-        .card-back.bad { background: linear-gradient(135deg, #ffcdd2, #e57373); border-color: var(--red); }
-        .role-img { width: 100%; height: 100%; object-fit: cover; border-radius: 8px; }
-        .card-back.has-image { padding: 0; border: none; background: none; }
         
-        /* [新增] 翻面按鈕與文字詳情樣式 */
-        .toggle-btn {
-            position: absolute; bottom: 5px; left: 50%; transform: translateX(-50%);
-            background: rgba(0,0,0,0.7); color: white; border: 1px solid #aaa;
-            padding: 4px 10px; border-radius: 15px; font-size: 0.8rem; cursor: pointer; z-index: 10;
-            white-space: nowrap; font-weight: bold;
-        }
-        .toggle-btn:hover { background: var(--gold); color: black; }
-        .role-title { font-size: 1.4rem; font-weight: bold; margin-bottom: 10px; border-bottom: 2px solid #555; width: 80%; }
-        .role-desc { font-size: 0.9rem; padding: 0 10px; line-height: 1.5; color: #444; font-weight: bold;}
-        .vision-box { margin-top: 15px; padding: 8px; background: rgba(0,0,0,0.05); border-radius: 5px; width: 90%; font-size: 0.85rem; color: #333; border: 1px dashed #888; }
+        .card-front, .card-back { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; border-radius: 12px; border: 2px solid #6d4c41; box-shadow: 0 10px 25px black; display: flex; flex-direction: column; align-items: center; }
+        .card-front { background: #2d1e18 repeating-linear-gradient(45deg, #3e2723 0, #3e2723 10px, #2d1e18 10px, #2d1e18 20px); color: #6d4c41; font-size: 4rem; text-shadow: 1px 1px 0 rgba(255,255,255,0.1); justify-content: center;}
+        .card-back { background: linear-gradient(135deg, #fffde7, #fff9c4); color: #333; transform: rotateY(180deg); border: 4px solid var(--gold); padding: 0; overflow: hidden; }
+        .card-back.bad { background: linear-gradient(135deg, #ffcdd2, #e57373); border-color: var(--red); }
+
+        .card-top-image { flex: 5; width: 100%; position: relative; overflow: hidden; border-bottom: 2px solid #b86e00; }
+        .card-bottom-info { flex: 3; width: 100%; padding: 10px; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; background: rgba(255,255,255,0.3); overflow-y: auto; }
+        .role-img { width: 100%; height: 100%; object-fit: cover; }
+        .vision-overlay { position: absolute; bottom: 0; left: 0; width: 100%; background: rgba(0,0,0,0.8); color: #fff; font-size: 0.75rem; padding: 4px; box-sizing: border-box; }
+        
+        .role-title { font-size: 1.2rem; font-weight: bold; margin-bottom: 5px; border-bottom: 2px solid #555; width: 90%; text-align: center; }
+        .role-desc { font-size: 0.85rem; line-height: 1.3; color: #444; font-weight: bold; text-align: left; width: 100%; margin-bottom: 5px; }
+        .vision-list { font-size: 0.8rem; color: #333; text-align: left; width: 100%; background: rgba(0,0,0,0.05); padding: 5px; border-radius: 5px; }
 
         .modal-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.7); z-index: 200; display: flex; justify-content: center; align-items: center; }
         .modal-history { width: 80%; max-width: 600px; max-height: 80vh; overflow-y: auto; padding: 20px; }
@@ -142,7 +145,7 @@
         <div class="login-box">
             <h1>AVALON</h1>
             <input v-model="name" placeholder="輸入你的暱稱" @keyup.enter="join"><br>
-            <input v-model="roomId" placeholder="房間號碼 (例: 101)"><br>
+            <input v-model="roomId" placeholder="房間號碼 (例: 101)" @keyup.enter="join"><br>
             <p style="margin: 15px 0; color: #ccc;">選擇頭像</p>
             <div class="avatar-select">
                 <span v-for="a in avatars" :class="{selected: avatar===a}" @click="avatar=a">{{a}}</span>
@@ -153,6 +156,8 @@
     </div>
     <div id="game" :style="{display: joined ? 'block' : 'none'}">
         <div class="top-left-controls">
+            <div class="room-info-badge">房號: {{roomId}} | 人數: {{activePlayerCount}}</div>
+            
             <button class="control-btn" @click="showHistory = true">📜 戰況紀錄</button>
             <button class="control-btn reset-btn" :class="{voted: hasResetVoted}" @click="requestReset" v-if="!isSpectator">
                 {{ hasResetVoted ? '已請求重置' : '⚠ 請求重置' }}
@@ -269,25 +274,22 @@
                 <div class="card-inner">
                     <div class="card-front">?</div>
                     
-                    <div class="card-back" :class="{bad: isBadRole(myRole), 'has-image': roleImages[myRole] && !showCardText}">
-                        
-                        <div v-if="roleImages[myRole] && !showCardText" style="width:100%; height:100%;">
-                            <img :src="roleImages[myRole]" class="role-img">
-                            <div class="toggle-btn" @click.stop="toggleCardMode">🔄 查看技能與視野</div>
+                    <div class="card-back" :class="{bad: isBadRole(myRole)}">
+                        <div class="card-top-image">
+                            <img v-if="roleImages[myRole]" :src="roleImages[myRole]" class="role-img">
+                            <div v-else style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; background:#333; color:#aaa;">無圖片</div>
+                            <div class="vision-overlay" v-if="teammates.length || myRole === '梅林'">
+                                <span v-if="teammates.length">視野: {{ teammates.join(', ') }}</span>
+                                <span v-else-if="myRole === '梅林'" style="color:#ef5350">無可見壞人</span>
+                            </div>
                         </div>
-
-                        <div v-else style="width:100%; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center;">
+                        <div class="card-bottom-info">
                             <div class="role-title">{{ myRole }}</div>
-                            <div class="role-desc">
-                                {{ getRoleDesc(myRole) }}
+                            <div class="role-desc">{{ getRoleDesc(myRole) }}</div>
+                            <div class="vision-list" v-if="teammates.length">
+                                <strong>可見名單:</strong> {{ teammates.join(', ') }}
                             </div>
-                            <div class="vision-box" v-if="teammates.length || myRole === '梅林'">
-                                <div v-if="teammates.length"><strong>你的視野:</strong><br>{{ teammates.join(', ') }}</div>
-                                <div v-else-if="myRole === '梅林'" style="color:#ef5350">無可見壞人 (可能只有莫德雷德)</div>
-                            </div>
-                            <div class="toggle-btn" @click.stop="toggleCardMode" v-if="roleImages[myRole]">🔄 返回圖片</div>
                         </div>
-
                     </div>
                 </div>
             </div>
@@ -341,10 +343,6 @@
             const chatHistory = ref([]); const chatInput = ref(''); const chatRef = ref(null);
             const isSpectator = ref(false); const hostToken = ref('');
             
-            // [新增] 卡牌文字切換控制
-            const showCardText = ref(false);
-            const toggleCardMode = () => { showCardText.value = !showCardText.value; };
-
             const roleImages = {
                 '梅林': 'img/merlin.jpg', '派西維爾': 'img/percival.jpg', '刺客': 'img/assassin.jpg',
                 '莫甘娜': 'img/morgana.jpg', '莫德雷德': 'img/mordred.jpg', '奧伯倫': 'img/oberon.jpg',
@@ -393,7 +391,7 @@
                     if(data.state !== 'TEAM_SELECTION') mySelectedTeam.value = [];
                     if (data.settings && myToken.value !== hostToken.value) Object.assign(localSettings, data.settings);
                     if (data.state === 'LOBBY') { 
-                        myRole.value = ''; cardFlipped.value = false; showCardText.value = false; 
+                        myRole.value = ''; cardFlipped.value = false;
                     }
                 });
                 socket.on('role_info', (data) => { myRole.value = data.role; teammates.value = data.teammates; cardFlipped.value = true; setTimeout(() => cardFlipped.value = false, 4000); });
@@ -457,7 +455,7 @@
                 questResults, questIdx, teamSizeNeeded, voteTrack, myRole, teammates, cardFlipped, 
                 notepadContent, hasResetVoted, resetVotesCount, isMeReady, readyCount, isMeHost, hostToken, hostName, localSettings,
                 gameHistory, showHistory, chatHistory, chatInput, chatRef, isSpectator, activePlayers, activePlayerCount,
-                showCardText, toggleCardMode, getRoleDesc,
+                getRoleDesc,
                 join, toggleReady, requestReset, updateSettings, kickPlayer, handleAvatarClick, submitTeam, voteTeam, voteMission, sendChat,
                 isMeLeader, mySelectedTeam, amIInTeam, iHaveVoted, isBadRole, getLeaderName, getSeatStyle, 
                 toastMsg, isAssassinationPhase, isMeAssassin, roleImages 
