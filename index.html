@@ -6,7 +6,7 @@
     <title>Avalon Online</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Noto+Sans+TC:wght@400;700&display=swap');
-        :root { --bg-dark: #121212; --gold: #ffd700; --blue: #29b6f6; --red: #ef5350; }
+        :root { --bg-dark: #121212; --gold: #ffd700; --blue: #29b6f6; --red: #ef5350; --green: #66bb6a; }
         body { margin: 0; font-family: 'Noto Sans TC', sans-serif; background: #0f0f10 radial-gradient(circle at center, #1f1f2e 0%, #000 100%); color: white; overflow: hidden; height: 100vh; }
         .shake { animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both; }
         @keyframes shake { 10%, 90% { transform: translate3d(-1px, 0, 0); } 20%, 80% { transform: translate3d(2px, 0, 0); } 30%, 50%, 70% { transform: translate3d(-4px, 0, 0); } 40%, 60% { transform: translate3d(4px, 0, 0); } }
@@ -31,7 +31,6 @@
         .vote-dot { display: inline-block; width: 12px; height: 12px; border-radius: 50%; background: #333; margin-left: 5px; border: 1px solid #666; transition: 0.3s;}
         .vote-dot.filled { background: var(--red); box-shadow: 0 0 8px var(--red); border-color: #ff8a80;}
         
-        /* 投票狀態顯示 */
         .reset-status { position: absolute; top: 20px; left: 140px; color: #aaa; font-size: 0.9rem; pointer-events: none; z-index: 100; }
         .reset-btn { position: absolute; top: 20px; left: 20px; background: #d32f2f; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; z-index: 100; pointer-events: auto; }
         .reset-btn.voted { background: #555; cursor: default; }
@@ -40,67 +39,51 @@
         .table-surface { width: 100%; height: 100%; border-radius: 50%; background: radial-gradient(#6d4c41, #3e2723); border: 20px solid #2d1e18; box-shadow: 0 30px 60px rgba(0,0,0,0.8), inset 0 0 100px rgba(0,0,0,0.9); position: relative; display: flex; align-items: center; justify-content: center; }
         .table-logo { font-family: 'Cinzel', serif; font-size: 5rem; color: rgba(255,255,255,0.08); user-select: none; transform: rotateX(-25deg); }
         
-        /* [修正] 座位樣式：更整齊 */
-        .seat { 
-            position: absolute; width: 100px; height: 120px; 
-            display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
-            transform-origin: center center; transition: 0.5s; 
-            /* 讓位子中心點對準座標 */
-            transform: translate(-50%, -50%); 
+        /* 設定面板樣式 */
+        .settings-panel {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotateX(-25deg);
+            background: rgba(20, 20, 20, 0.9); border: 2px solid var(--gold); border-radius: 15px;
+            padding: 20px; width: 320px; text-align: center; box-shadow: 0 10px 30px black;
+            z-index: 50; backdrop-filter: blur(5px);
         }
+        .settings-title { font-size: 1.2rem; color: var(--gold); margin-bottom: 10px; border-bottom: 1px solid #555; padding-bottom: 5px; }
+        .settings-group { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-bottom: 10px; }
+        .role-check { display: flex; align-items: center; font-size: 0.9rem; cursor: pointer; background: rgba(255,255,255,0.1); padding: 5px 10px; border-radius: 5px; border: 1px solid #444; }
+        .role-check:hover { background: rgba(255,255,255,0.2); }
+        .role-check input { width: auto; margin: 0 5px 0 0; }
+        .role-check.disabled { opacity: 0.5; cursor: default; }
+        .balance-info { font-size: 0.8rem; color: #aaa; margin-top: 10px; }
+
+        .seat { position: absolute; width: 100px; height: 120px; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; transform-origin: center center; transition: 0.5s; transform: translate(-50%, -50%); }
         .seat-inner { transform: rotateX(-25deg); display: flex; flex-direction: column; align-items: center; cursor: pointer; width: 100%;}
         .avatar { width: 65px; height: 65px; border-radius: 50%; background: #444; border: 3px solid #888; display: flex; align-items: center; justify-content: center; font-size: 2.2rem; box-shadow: 0 5px 15px rgba(0,0,0,0.6); position: relative; transition: 0.3s; z-index: 2;}
         .avatar:hover { transform: translateY(-5px); }
         .avatar.leader { border-color: var(--gold); box-shadow: 0 0 25px var(--gold); }
         .avatar.in-team { border-color: var(--blue); box-shadow: 0 0 25px var(--blue); transform: scale(1.15); }
         .avatar.kill-target { border-color: var(--red); box-shadow: 0 0 30px var(--red); animation: pulse 1s infinite; cursor: crosshair; }
-        @keyframes pulse { 0% {transform: scale(1);} 50% {transform: scale(1.1);} 100% {transform: scale(1);} }
+        .avatar.ready { border-color: var(--green); box-shadow: 0 0 20px var(--green); }
+        .ready-badge { position: absolute; top: -5px; right: -5px; width: 24px; height: 24px; background: var(--green); color: white; border-radius: 50%; font-size: 14px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px black; border: 1px solid #fff; z-index: 3;}
         .vote-badge { position: absolute; bottom: -5px; right: -5px; width: 26px; height: 26px; background: #fff; border-radius: 50%; font-size: 16px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px black; border: 1px solid #333; z-index: 3;}
-        
-        /* [修正] 名字標籤樣式：不換行，太長省略 */
-        .name-tag { 
-            background: rgba(0,0,0,0.8); padding: 4px 10px; border-radius: 12px; margin-top: 8px; 
-            font-size: 0.85rem; border: 1px solid #555; color: #ddd; 
-            max-width: 90px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-            text-align: center;
-        }
-
+        .name-tag { background: rgba(0,0,0,0.8); padding: 4px 10px; border-radius: 12px; margin-top: 8px; font-size: 0.85rem; border: 1px solid #555; color: #ddd; max-width: 90px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: center; }
         .status-msg { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -120%) rotateX(-25deg); font-size: 1.8rem; text-shadow: 0 3px 8px black; text-align: center; width: 400px; pointer-events: none; z-index: 20; font-family: 'Cinzel', serif; }
         .action-panel { position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%); display: flex; gap: 25px; z-index: 50; }
         .action-btn { padding: 15px 40px; font-size: 1.2rem; border-radius: 50px; border: none; font-weight: bold; cursor: pointer; box-shadow: 0 10px 20px rgba(0,0,0,0.6); transition: 0.2s; font-family: 'Cinzel', serif; text-transform: uppercase; }
         .btn-approve { background: linear-gradient(to bottom, #66bb6a, #43a047); color: white; border: 2px solid #2e7d32; }
         .btn-reject { background: linear-gradient(to bottom, #ef5350, #e53935); color: white; border: 2px solid #c62828; }
+        .btn-ready { background: linear-gradient(to bottom, #7e57c2, #5e35b1); color: white; border: 2px solid #4527a0; }
+        .btn-ready.is-ready { background: linear-gradient(to bottom, #444, #333); color: #aaa; border: 2px solid #222; }
         .action-btn:hover { transform: translateY(-3px) scale(1.05); filter: brightness(1.1); }
         .game-log { position: absolute; bottom: 20px; left: 20px; width: 320px; height: 220px; background: rgba(20, 20, 20, 0.85); border: 1px solid #555; border-radius: 12px; overflow-y: auto; padding: 15px; font-size: 0.9rem; z-index: 40; font-family: monospace; backdrop-filter: blur(5px); box-shadow: 0 5px 20px rgba(0,0,0,0.5); }
         .game-log div { margin-bottom: 6px; padding-bottom: 6px; border-bottom: 1px solid rgba(255,255,255,0.08); line-height: 1.4; }
         .game-log::-webkit-scrollbar { width: 6px; }
         .game-log::-webkit-scrollbar-thumb { background: #666; border-radius: 5px; }
-        
-        /* 角色卡與筆記本區塊 */
         .bottom-right-container { position: absolute; bottom: 20px; right: 20px; display: flex; align-items: flex-end; gap: 10px; z-index: 50; }
-        
-        /* 筆記本 */
-        .notepad {
-            width: 200px; height: 220px; background: rgba(255, 255, 255, 0.1); 
-            border: 1px solid #555; border-radius: 10px; padding: 10px;
-            display: flex; flex-direction: column; backdrop-filter: blur(5px);
-            transition: 0.3s;
-        }
+        .notepad { width: 200px; height: 220px; background: rgba(255, 255, 255, 0.1); border: 1px solid #555; border-radius: 10px; padding: 10px; display: flex; flex-direction: column; backdrop-filter: blur(5px); transition: 0.3s; }
         .notepad:focus-within { background: rgba(255, 255, 255, 0.2); border-color: var(--gold); }
-        .notepad textarea {
-            width: 100%; height: 100%; background: transparent; border: none; 
-            color: #ddd; resize: none; font-family: 'Noto Sans TC', monospace;
-            outline: none; font-size: 0.9rem;
-        }
+        .notepad textarea { width: 100%; height: 100%; background: transparent; border: none; color: #ddd; resize: none; font-family: 'Noto Sans TC', monospace; outline: none; font-size: 0.9rem; }
         .notepad-title { font-size: 0.8rem; color: #aaa; margin-bottom: 5px; border-bottom: 1px solid #444; }
-
         .card-container { width: 150px; height: 220px; perspective: 1000px; cursor: pointer; position: relative; }
-        .player-name-plate { 
-            position: absolute; top: -30px; left: 50%; transform: translateX(-50%);
-            background: var(--gold); color: #000; padding: 2px 10px; 
-            border-radius: 4px; font-weight: bold; font-size: 0.9rem; white-space: nowrap;
-            box-shadow: 0 2px 5px black;
-        }
+        .player-name-plate { position: absolute; top: -30px; left: 50%; transform: translateX(-50%); background: var(--gold); color: #000; padding: 2px 10px; border-radius: 4px; font-weight: bold; font-size: 0.9rem; white-space: nowrap; box-shadow: 0 2px 5px black; }
         .card-inner { position: relative; width: 100%; height: 100%; text-align: center; transition: transform 0.6s; transform-style: preserve-3d; }
         .card-container.flipped .card-inner { transform: rotateY(180deg); }
         .card-front, .card-back { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; border-radius: 12px; border: 2px solid #6d4c41; box-shadow: 0 10px 25px black; display: flex; flex-direction: column; align-items: center; justify-content: center; }
@@ -110,7 +93,6 @@
         .role-title { font-size: 1.6rem; font-weight: bold; margin-bottom: 15px; border-bottom: 2px solid #555; width: 80%; }
         .role-desc { font-size: 0.85rem; padding: 0 10px; line-height: 1.5; color: #444; font-weight: bold;}
         .toast { position: fixed; top: 15%; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.95); padding: 15px 40px; border-radius: 50px; border: 2px solid var(--gold); color: var(--gold); font-size: 1.4rem; animation: fadeInOut 3s forwards; z-index: 300; pointer-events: none; white-space: nowrap; }
-        @keyframes fadeInOut { 0% {opacity:0; transform:translate(-50%, -20px);} 10% {opacity:1; transform:translate(-50%, 0);} 90% {opacity:1;} 100% {opacity:0;} }
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.6.0/socket.io.min.js"></script>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
@@ -148,9 +130,40 @@
         </div>
         <div class="table-container">
             <div class="table-surface">
-                <div class="table-logo">AVALON</div>
-                <div class="status-msg">
-                    <div v-if="state === 'LOBBY'" style="color:#aaa; font-size: 1.2rem;">等待玩家加入 ({{players.length}}人)...<br><span style="font-size:0.8rem; opacity:0.7;">至少需 1 人才能開始</span></div>
+                <div class="table-logo" v-if="state !== 'LOBBY'">AVALON</div>
+                
+                <div class="settings-panel" v-if="state === 'LOBBY'">
+                    <div class="settings-title">遊戲設定 (房主可調)</div>
+                    <div class="settings-group">
+                        <label class="role-check" :class="{disabled: !isMeFirst}">
+                            <input type="checkbox" v-model="localSettings.merlin" :disabled="!isMeFirst" @change="updateSettings"> 梅林
+                        </label>
+                        <label class="role-check" :class="{disabled: !isMeFirst}">
+                            <input type="checkbox" v-model="localSettings.percival" :disabled="!isMeFirst" @change="updateSettings"> 派西維爾
+                        </label>
+                        <label class="role-check" :class="{disabled: !isMeFirst}">
+                            <input type="checkbox" v-model="localSettings.assassin" :disabled="!isMeFirst" @change="updateSettings"> 刺客
+                        </label>
+                        <label class="role-check" :class="{disabled: !isMeFirst}">
+                            <input type="checkbox" v-model="localSettings.morgana" :disabled="!isMeFirst" @change="updateSettings"> 莫甘娜
+                        </label>
+                        <label class="role-check" :class="{disabled: !isMeFirst}">
+                            <input type="checkbox" v-model="localSettings.mordred" :disabled="!isMeFirst" @change="updateSettings"> 莫德雷德
+                        </label>
+                        <label class="role-check" :class="{disabled: !isMeFirst}">
+                            <input type="checkbox" v-model="localSettings.oberon" :disabled="!isMeFirst" @change="updateSettings"> 奧伯倫
+                        </label>
+                    </div>
+                    <div class="balance-info">
+                        當前人數: {{ players.length }}<br>
+                        好人 / 壞人 比例將由系統自動平衡
+                    </div>
+                    <div class="status-msg" style="position:static; margin-top:20px; font-size:1.2rem; transform:none;">
+                        等待準備 ({{readyCount}}/{{players.length}})
+                    </div>
+                </div>
+
+                <div class="status-msg" v-if="state !== 'LOBBY'">
                     <div v-if="state === 'TEAM_SELECTION'"><span style="color:var(--gold)">{{getLeaderName()}}</span><br>正在挑選隊員<div style="font-size:1rem; margin-top:5px; color:#aaa; font-family:sans-serif">(需選 {{teamSizeNeeded}} 人)</div></div>
                     <div v-if="state === 'TEAM_VOTING'">全員投票中...</div>
                     <div v-if="state === 'MISSION'">隊伍執行任務中...</div>
@@ -159,10 +172,11 @@
                 </div>
                 <div v-for="(p, index) in players" :key="p.token" class="seat" :class="{disconnected: !p.is_connected}" :style="getSeatStyle(index, players.length)">
                     <div class="seat-inner">
-                        <div class="avatar" :class="{leader: p.is_leader, 'in-team': p.in_team, 'kill-target': isAssassinationPhase && isMeAssassin && p.token !== myToken}" @click="handleAvatarClick(p)">
+                        <div class="avatar" :class="{leader: p.is_leader, 'in-team': p.in_team, 'kill-target': isAssassinationPhase && isMeAssassin && p.token !== myToken, 'ready': p.is_ready}" @click="handleAvatarClick(p)">
                             {{ p.avatar }}
                             <div class="vote-badge" v-if="state === 'TEAM_VOTING' && p.has_voted">📩</div>
                             <div class="vote-badge" v-if="state === 'MISSION' && p.in_team && p.has_voted">⚔️</div>
+                            <div class="ready-badge" v-if="state === 'LOBBY' && p.is_ready">✔</div>
                         </div>
                         <div class="name-tag">{{ p.name }}</div>
                     </div>
@@ -171,8 +185,9 @@
         </div>
         <div class="action-panel">
             <div v-if="state === 'LOBBY'">
-                <button class="action-btn btn-gold" @click="startGame" v-if="players.length >= 1">開始遊戲</button>
-                <div v-else style="color:#666; font-size:1.2rem; margin-top:10px;">等待更多玩家...</div>
+                <button class="action-btn btn-ready" :class="{'is-ready': isMeReady}" @click="toggleReady">
+                    {{ isMeReady ? '取消準備' : '準備' }}
+                </button>
             </div>
             <div v-if="state === 'TEAM_SELECTION' && isMeLeader">
                 <button class="action-btn btn-gold" :disabled="mySelectedTeam.length !== teamSizeNeeded" @click="submitTeam" :style="{opacity: mySelectedTeam.length !== teamSizeNeeded ? 0.5 : 1}">確認提案 ({{mySelectedTeam.length}}/{{teamSizeNeeded}})</button>
@@ -193,30 +208,17 @@
                 <div class="notepad-title">📝 隨身筆記 (自動儲存)</div>
                 <textarea v-model="notepadContent" placeholder="記錄誰是好人/壞人..."></textarea>
             </div>
-
             <div class="card-container" :class="{flipped: cardFlipped}" @click="cardFlipped = !cardFlipped" v-if="myRole">
                 <div class="player-name-plate">{{ name }}</div>
-                <div class="card-inner">
-                    <div class="card-front">?</div>
-                    <div class="card-back" :class="{bad: isBadRole(myRole)}">
-                        <div class="role-title">{{ myRole }}</div>
-                        <div class="role-desc">
-                            <div v-if="teammates.length">
-                                <span style="display:block; margin-bottom:5px; opacity:0.6">你的視野</span>{{ teammates.join(', ') }}
-                            </div>
-                            <div v-else><span style="opacity:0.6">無特殊視野</span></div>
-                        </div>
-                    </div>
-                </div>
+                <div class="card-inner"><div class="card-front">?</div><div class="card-back" :class="{bad: isBadRole(myRole)}"><div class="role-title">{{ myRole }}</div><div class="role-desc"><div v-if="teammates.length"><span style="display:block; margin-bottom:5px; opacity:0.6">你的視野</span>{{ teammates.join(', ') }}</div><div v-else><span style="opacity:0.6">無特殊視野</span></div></div></div></div>
             </div>
         </div>
-
         <div v-if="toastMsg" class="toast">{{ toastMsg }}</div>
     </div>
 </div>
 <script>
     const socket = io();
-    const { createApp, ref, computed, nextTick, watch } = Vue;
+    const { createApp, ref, computed, nextTick, watch, reactive } = Vue;
     createApp({
         setup() {
             const name = ref(''); const roomId = ref('101'); const avatar = ref('🦁');
@@ -227,7 +229,9 @@
             const myRole = ref(''); const teammates = ref([]); const cardFlipped = ref(false);
             const mySelectedTeam = ref([]); const toastMsg = ref(''); const logRef = ref(null);
             
-            // 筆記本資料
+            // [新增] 本地設定狀態 (與伺服器同步)
+            const localSettings = reactive({ merlin: true, percival: true, assassin: true, morgana: true, mordred: false, oberon: false });
+
             const notepadContent = ref(localStorage.getItem('avalon_notes') || '');
             watch(notepadContent, (newVal) => { localStorage.setItem('avalon_notes', newVal); });
 
@@ -239,12 +243,17 @@
                 questIdx.value = data.quest_idx; teamSizeNeeded.value = data.team_size_needed; voteTrack.value = data.vote_track;
                 if(data.logs) logs.value = data.logs;
                 if(data.state !== 'TEAM_SELECTION') mySelectedTeam.value = [];
+                // [新增] 同步設定 (如果不是房主，就更新本地顯示)
+                if (data.settings && !isMeFirst.value) Object.assign(localSettings, data.settings);
             });
             socket.on('role_info', (data) => { myRole.value = data.role; teammates.value = data.teammates; cardFlipped.value = true; setTimeout(() => cardFlipped.value = false, 4000); });
             socket.on('vote_finished', (data) => showToast(data.pass ? "投票通過！" : "投票被否決！"));
             socket.on('game_over', (data) => showToast("遊戲結束: " + data.winner));
 
             const isMeLeader = computed(() => { const me = players.value.find(p => p.token === myToken.value); return me && me.is_leader; });
+            // [新增] 判斷自己是不是第一個進房的 (房主)
+            const isMeFirst = computed(() => players.value.length > 0 && players.value[0].token === myToken.value);
+            
             const amIInTeam = computed(() => { const me = players.value.find(p => p.token === myToken.value); return me && me.in_team; });
             const iHaveVoted = computed(() => { const me = players.value.find(p => p.token === myToken.value); return me && me.has_voted; });
             const hasToken = computed(() => !!myToken.value);
@@ -252,10 +261,14 @@
             const isMeAssassin = computed(() => myRole.value === '刺客');
             const hasResetVoted = computed(() => { const me = players.value.find(p => p.token === myToken.value); return me && me.has_reset_voted; });
             const resetVotesCount = computed(() => players.value.filter(p => p.has_reset_voted).length);
+            const isMeReady = computed(() => { const me = players.value.find(p => p.token === myToken.value); return me && me.is_ready; });
+            const readyCount = computed(() => players.value.filter(p => p.is_ready).length);
 
             const join = () => { if(!name.value) return alert("請輸入你的大名"); socket.emit('join_room', { name: name.value, room_id: roomId.value, avatar: avatar.value, token: myToken.value }); };
-            const startGame = () => socket.emit('start_game', roomId.value);
+            const toggleReady = () => socket.emit('toggle_ready', roomId.value);
             const requestReset = () => { if(!hasResetVoted.value) socket.emit('request_reset', roomId.value); };
+            // [新增] 發送設定更新
+            const updateSettings = () => { if(isMeFirst.value) socket.emit('update_settings', { room_id: roomId.value, settings: localSettings }); };
 
             const toggleTeam = (token) => {
                 if(state.value !== 'TEAM_SELECTION' || !isMeLeader.value) return;
@@ -275,23 +288,19 @@
             const showToast = (msg) => { toastMsg.value = msg; setTimeout(() => toastMsg.value = '', 3000); };
             const isBadRole = (r) => ['刺客','莫甘娜','壞人','莫德雷德'].includes(r);
             const getLeaderName = () => players.value.find(p => p.is_leader)?.name || '';
-            
             const getSeatStyle = (index, total) => {
                 const myIndex = players.value.findIndex(p => p.token === myToken.value);
                 let relativeIndex = index;
                 if (myIndex !== -1) relativeIndex = (index - myIndex + total) % total;
                 const angle = (relativeIndex / total) * 2 * Math.PI + Math.PI/2;
-                const radius = 43; 
-                const x = Math.cos(angle) * radius + 50;
-                const y = Math.sin(angle) * radius + 50;
-                return { left: x + '%', top: y + '%' };
+                const radius = 43; const x = Math.cos(angle) * radius + 50; const y = Math.sin(angle) * radius + 50; return { left: x + '%', top: y + '%' };
             };
 
             return { 
                 name, roomId, avatar, avatars, joined, hasToken, myToken, state, players, 
                 questResults, questIdx, teamSizeNeeded, voteTrack, logs, myRole, teammates, cardFlipped, 
-                notepadContent, hasResetVoted, resetVotesCount,
-                join, startGame, requestReset, handleAvatarClick, submitTeam, voteTeam, voteMission, 
+                notepadContent, hasResetVoted, resetVotesCount, isMeReady, readyCount, isMeFirst, localSettings,
+                join, toggleReady, requestReset, updateSettings, handleAvatarClick, submitTeam, voteTeam, voteMission, 
                 isMeLeader, mySelectedTeam, amIInTeam, iHaveVoted, isBadRole, getLeaderName, getSeatStyle, 
                 logRef, toastMsg, isAssassinationPhase, isMeAssassin 
             };
