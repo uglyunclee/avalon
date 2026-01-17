@@ -2,6 +2,7 @@ import socketio
 import random
 import uvicorn
 import uuid
+import os
 from datetime import datetime
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
@@ -368,4 +369,6 @@ async def request_reset(sid, room_id):
 
 
 if __name__ == '__main__':
-    uvicorn.run(app_asgi, host="0.0.0.0", port=8000)
+    # 2. 修改這裡：讀取環境變數 PORT，如果沒有（例如在自己電腦）才用 8000
+    port = int(os.environ.get("PORT", 8000))
+    uvicorn.run(app_asgi, host="0.0.0.0", port=port)
