@@ -6,7 +6,7 @@
     <title>Avalon Online</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Noto+Sans+TC:wght@400;700&display=swap');
-        :root { --bg-dark: #121212; --gold: #ffd700; --blue: #29b6f6; --red: #ef5350; --green: #66bb6a; --parchment: #f3e5ab; }
+        :root { --bg-dark: #121212; --gold: #ffd700; --blue: #29b6f6; --red: #ef5350; --green: #66bb6a; --parchment: #f3e5ab; --wood: #4e342e; }
         
         body { margin: 0; font-family: 'Noto Sans TC', sans-serif; background: #0f0f10 radial-gradient(circle at center, #1f1f2e 0%, #000 100%); color: white; overflow: hidden; height: 100vh; }
         #login { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); z-index: 200; position: fixed; top:0; width:100%; }
@@ -60,16 +60,9 @@
         .vote-badge { position: absolute; bottom: -5px; right: -5px; width: 26px; height: 26px; background: #fff; border-radius: 50%; font-size: 16px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px black; border: 1px solid #333; z-index: 3;}
         .name-tag { background: rgba(0,0,0,0.8); padding: 4px 10px; border-radius: 12px; margin-top: 8px; font-size: 0.85rem; border: 1px solid #555; color: #ddd; max-width: 90px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: center; }
         
-        /* [新增] 房主皇冠 */
         .host-badge { position: absolute; top: -25px; left: 50%; transform: translateX(-50%); font-size: 24px; text-shadow: 0 2px 5px black; z-index: 10; animation: float 2s infinite ease-in-out;}
         @keyframes float { 0%, 100% {transform:translateX(-50%) translateY(0);} 50% {transform:translateX(-50%) translateY(-5px);} }
-        /* [新增] 踢人按鈕 */
-        .kick-badge { 
-            position: absolute; top: -5px; right: -15px; width: 24px; height: 24px; 
-            background: #d32f2f; color: white; border-radius: 50%; font-size: 12px; 
-            display: flex; align-items: center; justify-content: center; 
-            box-shadow: 0 2px 5px black; border: 1px solid #fff; z-index: 4; cursor: pointer;
-        }
+        .kick-badge { position: absolute; top: -5px; right: -15px; width: 24px; height: 24px; background: #d32f2f; color: white; border-radius: 50%; font-size: 12px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px black; border: 1px solid #fff; z-index: 4; cursor: pointer; }
         .kick-badge:hover { transform: scale(1.1); background: red; }
 
         .status-msg { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -120%) rotateX(-25deg); font-size: 1.8rem; text-shadow: 0 3px 8px black; text-align: center; width: 400px; pointer-events: none; z-index: 20; font-family: 'Cinzel', serif; }
@@ -307,14 +300,13 @@
             const avatars = ['🦁','🦊','🐼','🐨','🐯','🐷','🐸','🐵', '🧙‍♂️', '🧝‍♀️'];
             const joined = ref(false); const myToken = ref(localStorage.getItem('avalon_token') || '');
             const state = ref('LOBBY'); const players = ref([]); const questResults = ref([null, null, null, null, null]);
-            const questIdx = ref(0); const teamSizeNeeded = ref(0); const voteTrack = ref(0); 
+            const questIdx = ref(0); const teamSizeNeeded = ref(0); const voteTrack = ref(0); const logs = ref([]);
             const myRole = ref(''); const teammates = ref([]); const cardFlipped = ref(false);
             const mySelectedTeam = ref([]); const toastMsg = ref(''); 
             const localSettings = reactive({ merlin: true, percival: true, assassin: true, morgana: true, mordred: false, oberon: false });
             const gameHistory = ref([]); const showHistory = ref(false);
             const chatHistory = ref([]); const chatInput = ref(''); const chatRef = ref(null);
-            const isSpectator = ref(false);
-            const hostToken = ref(''); // [新增] 房主 Token
+            const isSpectator = ref(false); const hostToken = ref('');
 
             const notepadContent = ref(localStorage.getItem('avalon_notes') || '');
             watch(notepadContent, (newVal) => { localStorage.setItem('avalon_notes', newVal); });
@@ -333,32 +325,22 @@
             socket.on('update_state', (data) => {
                 state.value = data.state; players.value = data.players; questResults.value = data.quest_results;
                 questIdx.value = data.quest_idx; teamSizeNeeded.value = data.team_size_needed; voteTrack.value = data.vote_track;
-                hostToken.value = data.host_token; // [新增] 更新房主
+                hostToken.value = data.host_token;
                 if(data.chat_history) chatHistory.value = data.chat_history;
                 if(data.game_history) gameHistory.value = data.game_history;
                 if(data.state !== 'TEAM_SELECTION') mySelectedTeam.value = [];
-                // 如果不是房主，更新設定
                 if (data.settings && myToken.value !== hostToken.value) Object.assign(localSettings, data.settings);
             });
             socket.on('role_info', (data) => { myRole.value = data.role; teammates.value = data.teammates; cardFlipped.value = true; setTimeout(() => cardFlipped.value = false, 4000); });
             socket.on('vote_finished', (data) => showToast(data.pass ? "投票通過！" : "投票被否決！"));
             socket.on('game_over', (data) => showToast("遊戲結束: " + data.winner));
-            // [新增] 踢人通知
-            socket.on('kicked', (data) => {
-                alert(data.msg);
-                localStorage.removeItem('avalon_token'); // 清除 Token
-                location.reload(); // 重整頁面
-            });
+            socket.on('kicked', (data) => { alert(data.msg); localStorage.removeItem('avalon_token'); location.reload(); });
 
-            const activePlayers = computed(() => players.value.filter(p => !p.is_spectator)); // 只算有座位的
+            const activePlayers = computed(() => players.value.filter(p => !p.is_spectator));
             const activePlayerCount = computed(() => activePlayers.value.length);
             
-            // [修正] 判斷是否為房主
             const isMeHost = computed(() => myToken.value === hostToken.value);
-            const hostName = computed(() => {
-                const host = players.value.find(p => p.token === hostToken.value);
-                return host ? host.name : 'Unknown';
-            });
+            const hostName = computed(() => { const host = players.value.find(p => p.token === hostToken.value); return host ? host.name : 'Unknown'; });
 
             const isMeLeader = computed(() => { const me = players.value.find(p => p.token === myToken.value); return me && me.is_leader; });
             const amIInTeam = computed(() => { const me = players.value.find(p => p.token === myToken.value); return me && me.in_team; });
