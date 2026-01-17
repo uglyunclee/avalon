@@ -8,15 +8,18 @@ from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 
+# === 基礎設定 ===
 sio = socketio.AsyncServer(async_mode='asgi', cors_allowed_origins='*')
 app = FastAPI()
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
 app_asgi = socketio.ASGIApp(sio, app)
 app.mount("/", StaticFiles(directory=".", html=True), name="static")
 
+# === 遊戲平衡設定 ===
 BALANCE_CONFIG = {
     1: (1, 0), 2: (1, 1), 3: (2, 1), 4: (3, 1),
-    5: (3, 2), 6: (4, 2), 7: (4, 3), 8: (5, 3), 9: (6, 3), 10: (6, 4)
+    5: (3, 2), 6: (4, 2), 7: (4, 3), 
+    8: (5, 3), 9: (6, 3), 10: (6, 4)
 }
 QUEST_CONFIG = {
     1: [1, 1, 1, 1, 1], 2: [1, 1, 1, 1, 1], 3: [1, 2, 1, 2, 2], 4: [2, 2, 2, 3, 3],
@@ -34,6 +37,8 @@ class GameState:
     ASSASSINATION = 'ASSASSINATION'
     GAME_OVER = 'GAME_OVER'
 
+# === 輔助功能 ===
+
 async def add_log(room_id, message, color='white', type='system'):
     if room_id not in rooms: return
     timestamp = datetime.now().strftime("%H:%M")
@@ -44,15 +49,10 @@ async def add_log(room_id, message, color='white', type='system'):
 async def play_sound(room_id, sound_name):
     await sio.emit('play_sound', {'name': sound_name}, room=room_id)
 
-# [新增] 計算目前的房主 (最早加入且連線中的非觀察者)
 def get_host_token(room):
-    # 篩選出：在線 + 非觀察者
-    active_candidates = [
-        p for p in room['players'].values() 
-        if p['connected'] and p['role'] != 'spectator'
-    ]
+    """計算當前房主：最早加入且在線的非觀察者"""
+    active_candidates = [p for p in room['players'].values() if p['connected'] and p['role'] != 'spectator']
     if not active_candidates: return None
-    # 依加入時間排序，取第一個
     sorted_candidates = sorted(active_candidates, key=lambda x: x['join_time'])
     return sorted_candidates[0]['token']
 
@@ -60,12 +60,10 @@ async def broadcast_state(room_id):
     room = rooms[room_id]
     players_list = []
     
-    # 這裡回傳所有玩家(含離線)，前端自己處理顯示
-    # 但為了座位順序，我們只對非觀察者排序
+    # 篩選非觀察者並排序
     active_tokens = [k for k,v in room['players'].items() if v['role'] != 'spectator']
     sorted_tokens = sorted(active_tokens, key=lambda t: room['players'][t]['join_time'])
 
-    # 先加入非觀察者
     for idx, token in enumerate(sorted_tokens):
         p = room['players'][token]
         has_voted = False
@@ -82,9 +80,7 @@ async def broadcast_state(room_id):
             'role_type': 'player'
         })
     
-    # 計算當前房主
     current_host = get_host_token(room)
-
     required = 0
     try: required = QUEST_CONFIG[len(sorted_tokens)][room['quest_index']]
     except: pass
@@ -96,9 +92,11 @@ async def broadcast_state(room_id):
         'settings': room['settings'],
         'game_history': room.get('game_history', []),
         'chat_history': room.get('chat_history', []),
-        'host_token': current_host # [新增] 告訴前端誰是房主
+        'host_token': current_host
     }
     await sio.emit('update_state', data, room=room_id)
+
+# === Socket 事件處理 ===
 
 @sio.event
 async def join_room(sid, data):
@@ -147,48 +145,33 @@ async def disconnect(sid):
             token = room['sid_map'][sid]
             if token in room['players']:
                 room['players'][token]['connected'] = False
-                # 斷線時重新廣播，這樣房主權限會自動轉移
                 await broadcast_state(room_id)
             break
 
-# [新增] 踢人功能
 @sio.event
 async def kick_player(sid, data):
     room_id = data['room_id']; target_token = data['target_token']
     room = rooms.get(room_id)
     if not room: return
     
-    # 驗證操作者是否為房主
-    host_token = get_host_token(room)
-    requester_token = room['sid_map'].get(sid)
-    
-    if requester_token != host_token: return
+    if room['sid_map'].get(sid) != get_host_token(room): return # 權限驗證
     if target_token not in room['players']: return
     
     target_p = room['players'][target_token]
-    target_sid = target_p['sid']
-    target_name = target_p['name']
-    
-    # 通知被踢的人
     if target_p['connected']:
-        await sio.emit('kicked', {'msg': '你已被房主踢出房間'}, to=target_sid)
+        await sio.emit('kicked', {'msg': '你已被房主踢出房間'}, to=target_p['sid'])
     
-    # 刪除資料
     del room['players'][target_token]
-    # 清理 sid_map
-    if target_sid in room['sid_map']: del room['sid_map'][target_sid]
+    if target_p['sid'] in room['sid_map']: del room['sid_map'][target_p['sid']]
     
-    await add_log(room_id, f"🚫 {target_name} 被房主踢出", "red")
+    await add_log(room_id, f"🚫 {target_p['name']} 被房主踢出", "red")
     await broadcast_state(room_id)
 
-# 更新設定 (權限改用 get_host_token)
 @sio.event
 async def update_settings(sid, data):
     room_id = data['room_id']; new_settings = data['settings']; room = rooms.get(room_id)
     if not room or room['state'] != GameState.LOBBY: return
-    
     if room['sid_map'].get(sid) != get_host_token(room): return 
-    
     room['settings'] = new_settings
     await broadcast_state(room_id)
 
@@ -273,12 +256,10 @@ async def send_role_info(sid, p_obj, all_players):
 @sio.event
 async def send_chat(sid, data):
     room_id = data['room_id']; message = data['message']
-    room = rooms.get(room_id)
-    if not room: return
-    token = room['sid_map'].get(sid)
-    if not token: return
-    player_name = room['players'][token]['name']
-    await add_log(room_id, f"<b>{player_name}:</b> {message}", "#fff", "chat")
+    room = rooms.get(room_id); token = room['sid_map'].get(sid)
+    if room and token:
+        player_name = room['players'][token]['name']
+        await add_log(room_id, f"<b>{player_name}:</b> {message}", "#fff", "chat")
 
 @sio.event
 async def select_team(sid, data):
@@ -312,6 +293,7 @@ async def vote_team(sid, data):
         }
         detail_str = " ".join([f"{room['players'][t]['name']}{'⭕' if v else '❌'}" for t, v in room['votes'].items()])
         await sio.emit('vote_finished', {'details': detail_str, 'pass': passed}, room=room_id)
+        
         if passed:
             room['vote_track'] = 0; room['state'] = GameState.MISSION; room['mission_votes'] = []; room['mission_votes_who'] = []
             room['current_history_entry'] = history_entry 
