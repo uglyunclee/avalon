@@ -257,7 +257,7 @@
 
         <div class="action-panel">
             <div v-if="state === 'LOBBY'">
-                <button class="action-btn btn-gold" @click="startGame" v-if="players.length >= 5">開始遊戲</button>
+                <button class="action-btn btn-gold" @click="startGame" v-if="players.length >= 1">開始遊戲</button>
                 <div v-else style="color:#666; font-size:1.2rem; margin-top:10px;">等待更多玩家...</div>
             </div>
 
