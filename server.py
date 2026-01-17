@@ -2,7 +2,7 @@ import socketio
 import random
 import uuid
 import os
-import uvicorn  # [修復] 補上這行，不然會報錯！
+import uvicorn # [已修復] 補上這行
 from datetime import datetime
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
@@ -14,14 +14,18 @@ app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True, 
 app_asgi = socketio.ASGIApp(sio, app)
 app.mount("/", StaticFiles(directory=".", html=True), name="static")
 
-# 標準人數配置 (好人數量, 壞人數量)
+# [已優化] 補上 2, 3, 4 人的測試設定 (好人, 壞人)
 BALANCE_CONFIG = {
-    1: (1, 0), 5: (3, 2), 6: (4, 2), 7: (4, 3),
+    1: (1, 0), 
+    2: (1, 1), 3: (2, 1), 4: (3, 1), # 測試用配置
+    5: (3, 2), 6: (4, 2), 7: (4, 3),
     8: (5, 3), 9: (6, 3), 10: (6, 4)
 }
 
 QUEST_CONFIG = {
-    1: [1, 1, 1, 1, 1], 5: [2, 3, 2, 3, 3], 6: [2, 3, 4, 3, 4], 7: [2, 3, 3, 4, 4], 
+    1: [1, 1, 1, 1, 1], 
+    2: [1, 1, 1, 1, 1], 3: [1, 2, 1, 2, 2], 4: [2, 2, 2, 3, 3], # 測試用
+    5: [2, 3, 2, 3, 3], 6: [2, 3, 4, 3, 4], 7: [2, 3, 3, 4, 4], 
     8: [3, 4, 4, 5, 5], 9: [3, 4, 4, 5, 5], 10: [3, 4, 4, 5, 5],
 }
 
@@ -74,7 +78,7 @@ async def broadcast_state(room_id):
         'team_size_needed': required, 'vote_track': room['vote_track'],
         'logs': room['logs'],
         'settings': room['settings'],
-        'game_history': room.get('game_history', []) # 傳送戰況紀錄
+        'game_history': room.get('game_history', [])
     }
     await sio.emit('update_state', data, room=room_id)
 
@@ -123,8 +127,12 @@ async def toggle_ready(sid, room_id):
     if not token or room['state'] != GameState.LOBBY: return
     room['players'][token]['is_ready'] = not room['players'][token].get('is_ready', False)
     all_ready = all(pl['is_ready'] for pl in room['players'].values())
-    if all_ready and len(room['players']) >= 1: await start_game_logic(room_id)
-    else: await broadcast_state(room_id)
+    
+    # 這裡改成 >= 1 方便你測試
+    if all_ready and len(room['players']) >= 1: 
+        await start_game_logic(room_id)
+    else: 
+        await broadcast_state(room_id)
 
 async def start_game_logic(room_id):
     room = rooms[room_id]
@@ -132,7 +140,7 @@ async def start_game_logic(room_id):
     players_objs = [room['players'][t] for t in sorted_tokens]
     cnt = len(players_objs)
     settings = room['settings']
-    target_good, target_evil = BALANCE_CONFIG.get(cnt, (1, 0))
+    target_good, target_evil = BALANCE_CONFIG.get(cnt, (1, 0)) # 若人數不在表內，預設 (1,0)
     
     final_roles = []
     if settings['merlin']: final_roles.append("梅林")
@@ -145,6 +153,7 @@ async def start_game_logic(room_id):
     current_good = len([r for r in final_roles if r in ["梅林", "派西維爾"]])
     current_evil = len([r for r in final_roles if r in ["刺客", "莫甘娜", "莫德雷德", "奧伯倫"]])
     
+    # 補滿人數
     for _ in range(max(0, target_good - current_good)): final_roles.append("忠臣")
     for _ in range(max(0, target_evil - current_evil)): final_roles.append("壞人")
     
@@ -156,7 +165,7 @@ async def start_game_logic(room_id):
     room['state'] = GameState.TEAM_SELECTION
     room['quest_index'] = 0; room['leader_index'] = 0
     room['quest_results'] = [None] * 5; room['vote_track'] = 0
-    room['logs'] = []; room['game_history'] = [] # 清空歷史
+    room['logs'] = []; room['game_history'] = []
 
     for i, p_obj in enumerate(players_objs): p_obj['role'] = final_roles[i]
     for p_obj in players_objs: await send_role_info(p_obj['sid'], p_obj, players_objs)
@@ -206,7 +215,6 @@ async def vote_team(sid, data):
     if len(room['votes']) == len(room['players']):
         approves = list(room['votes'].values()).count(True); rejects = list(room['votes'].values()).count(False); passed = approves > rejects
         
-        # [新增] 紀錄歷史
         sorted_tokens = sorted(room['players'].keys(), key=lambda t: room['players'][t]['join_time'])
         leader_token = sorted_tokens[room['leader_index']]
         leader_name = room['players'][leader_token]['name']
@@ -215,10 +223,9 @@ async def vote_team(sid, data):
             'quest': room['quest_index'] + 1,
             'leader': leader_name,
             'team': [room['players'][t]['name'] for t in room['current_team']],
-            'votes': {room['players'][t]['name']: v for t, v in room['votes'].items()}, # 誰投了什麼
+            'votes': {room['players'][t]['name']: v for t, v in room['votes'].items()},
             'result': '通過' if passed else '否決',
-            'mission_result': None,
-            'fail_count': 0
+            'mission_result': None, 'fail_count': 0
         }
 
         detail_str = " ".join([f"{room['players'][t]['name']}{'⭕' if v else '❌'}" for t, v in room['votes'].items()])
@@ -226,11 +233,11 @@ async def vote_team(sid, data):
         
         if passed:
             room['vote_track'] = 0; room['state'] = GameState.MISSION; room['mission_votes'] = []; room['mission_votes_who'] = []
-            room['current_history_entry'] = history_entry # 暫存等結果
+            room['current_history_entry'] = history_entry 
             await add_log(room_id, f"✅ 通過 ({approves} vs {rejects})", "#66ff66")
         else:
             room['vote_track'] += 1; room['leader_index'] = (room['leader_index'] + 1) % len(room['players']); room['state'] = GameState.TEAM_SELECTION
-            room['game_history'].append(history_entry) # 否決直接存
+            room['game_history'].append(history_entry)
             await play_sound(room_id, 'fail'); await add_log(room_id, f"⚠️ 否決 ({approves} vs {rejects}) - 失敗: {room['vote_track']}", "#ff6666")
             if room['vote_track'] >= 5: await add_log(room_id, "💀 5次流局，壞人勝！", "red"); room['state'] = GameState.GAME_OVER; await sio.emit('game_over', {'winner': 'RED (流局)'}, room=room_id)
         await broadcast_state(room_id)
@@ -244,7 +251,6 @@ async def vote_mission(sid, data):
         if len(room['players']) >= 7 and room['quest_index'] == 3: is_fail = fail_count >= 2
         is_success = not is_fail
         
-        # [新增] 補完歷史紀錄
         if 'current_history_entry' in room:
             room['current_history_entry']['mission_result'] = "成功" if is_success else "失敗"
             room['current_history_entry']['fail_count'] = fail_count
