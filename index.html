@@ -6,7 +6,7 @@
     <title>Avalon Online</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Noto+Sans+TC:wght@400;700&display=swap');
-        :root { --bg-dark: #121212; --gold: #ffd700; --blue: #29b6f6; --red: #ef5350; --green: #66bb6a; --parchment: #f3e5ab; --wood: #4e342e; }
+        :root { --bg-dark: #121212; --gold: #ffd700; --blue: #29b6f6; --red: #ef5350; --green: #66bb6a; --parchment: #f3e5ab; }
         
         body { margin: 0; font-family: 'Noto Sans TC', sans-serif; background: #0f0f10 radial-gradient(circle at center, #1f1f2e 0%, #000 100%); color: white; overflow: hidden; height: 100vh; }
         #login { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); z-index: 200; position: fixed; top:0; width:100%; }
@@ -32,7 +32,6 @@
         
         .top-left-controls { position: absolute; top: 20px; left: 20px; display: flex; flex-direction: column; gap: 10px; z-index: 100; pointer-events: auto; }
         .control-btn { background: rgba(50,50,50,0.8); color: white; border: 1px solid #666; padding: 8px 15px; border-radius: 5px; font-size: 0.9rem; width: 120px; text-align: left; }
-        .control-btn:hover { background: rgba(80,80,80,0.9); }
         .reset-btn { background: #d32f2f; border-color: #b71c1c; }
         .reset-btn.voted { background: #555; cursor: default; }
 
@@ -56,9 +55,23 @@
         .avatar.in-team { border-color: var(--blue); box-shadow: 0 0 25px var(--blue); transform: scale(1.15); }
         .avatar.kill-target { border-color: var(--red); box-shadow: 0 0 30px var(--red); animation: pulse 1s infinite; cursor: crosshair; }
         .avatar.ready { border-color: var(--green); box-shadow: 0 0 20px var(--green); }
+        
         .ready-badge { position: absolute; top: -5px; right: -5px; width: 24px; height: 24px; background: var(--green); color: white; border-radius: 50%; font-size: 14px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px black; border: 1px solid #fff; z-index: 3;}
         .vote-badge { position: absolute; bottom: -5px; right: -5px; width: 26px; height: 26px; background: #fff; border-radius: 50%; font-size: 16px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px black; border: 1px solid #333; z-index: 3;}
         .name-tag { background: rgba(0,0,0,0.8); padding: 4px 10px; border-radius: 12px; margin-top: 8px; font-size: 0.85rem; border: 1px solid #555; color: #ddd; max-width: 90px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: center; }
+        
+        /* [新增] 房主皇冠 */
+        .host-badge { position: absolute; top: -25px; left: 50%; transform: translateX(-50%); font-size: 24px; text-shadow: 0 2px 5px black; z-index: 10; animation: float 2s infinite ease-in-out;}
+        @keyframes float { 0%, 100% {transform:translateX(-50%) translateY(0);} 50% {transform:translateX(-50%) translateY(-5px);} }
+        /* [新增] 踢人按鈕 */
+        .kick-badge { 
+            position: absolute; top: -5px; right: -15px; width: 24px; height: 24px; 
+            background: #d32f2f; color: white; border-radius: 50%; font-size: 12px; 
+            display: flex; align-items: center; justify-content: center; 
+            box-shadow: 0 2px 5px black; border: 1px solid #fff; z-index: 4; cursor: pointer;
+        }
+        .kick-badge:hover { transform: scale(1.1); background: red; }
+
         .status-msg { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -120%) rotateX(-25deg); font-size: 1.8rem; text-shadow: 0 3px 8px black; text-align: center; width: 400px; pointer-events: none; z-index: 20; font-family: 'Cinzel', serif; }
         .action-panel { position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%); display: flex; gap: 25px; z-index: 50; }
         .action-btn { padding: 15px 40px; font-size: 1.2rem; border-radius: 50px; border: none; font-weight: bold; cursor: pointer; box-shadow: 0 10px 20px rgba(0,0,0,0.6); transition: 0.2s; font-family: 'Cinzel', serif; text-transform: uppercase; }
@@ -67,14 +80,23 @@
         .btn-ready { background: linear-gradient(to bottom, #7e57c2, #5e35b1); color: white; border: 2px solid #4527a0; }
         .btn-ready.is-ready { background: linear-gradient(to bottom, #444, #333); color: #aaa; border: 2px solid #222; }
         .action-btn:hover { transform: translateY(-3px) scale(1.05); filter: brightness(1.1); }
-        .game-log { position: absolute; bottom: 20px; left: 20px; width: 320px; height: 220px; background: rgba(20, 20, 20, 0.85); border: 1px solid #555; border-radius: 12px; overflow-y: auto; padding: 15px; font-size: 0.9rem; z-index: 40; font-family: monospace; backdrop-filter: blur(5px); box-shadow: 0 5px 20px rgba(0,0,0,0.5); }
-        .game-log div { margin-bottom: 6px; padding-bottom: 6px; border-bottom: 1px solid rgba(255,255,255,0.08); line-height: 1.4; }
         
+        .chat-container { position: absolute; bottom: 20px; left: 20px; width: 320px; height: 300px; background: rgba(20, 20, 20, 0.85); border: 1px solid #555; border-radius: 12px; display: flex; flex-direction: column; z-index: 40; backdrop-filter: blur(5px); box-shadow: 0 5px 20px rgba(0,0,0,0.5); }
+        .chat-history { flex: 1; overflow-y: auto; padding: 10px; font-size: 0.9rem; font-family: 'Noto Sans TC', sans-serif;}
+        .chat-history::-webkit-scrollbar { width: 6px; }
+        .chat-history::-webkit-scrollbar-thumb { background: #666; border-radius: 5px; }
+        .chat-input-area { display: flex; border-top: 1px solid #444; padding: 8px; }
+        .chat-input { flex: 1; background: #333; border: none; color: white; padding: 8px; border-radius: 5px; outline: none; }
+        .chat-send-btn { margin-left: 8px; background: var(--blue); border: none; color: white; padding: 0 15px; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        .chat-msg { margin-bottom: 4px; line-height: 1.4; word-wrap: break-word;}
+        .chat-msg.system { color: #aaa; font-size: 0.85rem; font-style: italic; }
+        .chat-msg.chat { color: white; }
+        .chat-time { opacity: 0.5; font-size: 0.75rem; margin-right: 5px; }
+
         .bottom-right-container { position: absolute; bottom: 20px; right: 20px; display: flex; align-items: flex-end; gap: 10px; z-index: 50; }
         .notepad { width: 200px; height: 220px; background: var(--parchment); color: #3e2723; border: 4px solid #4e342e; border-radius: 5px; padding: 10px; display: flex; flex-direction: column; transition: 0.3s; box-shadow: 0 5px 15px black;}
         .notepad textarea { width: 100%; height: 100%; background: transparent; border: none; color: #3e2723; resize: none; font-family: 'Noto Sans TC', monospace; outline: none; font-size: 0.9rem; font-weight: bold; }
         .notepad-title { font-size: 0.8rem; color: #5d4037; margin-bottom: 5px; border-bottom: 1px solid #a1887f; font-weight: bold;}
-        
         .card-container { width: 150px; height: 220px; perspective: 1000px; cursor: pointer; position: relative; }
         .player-name-plate { position: absolute; top: -30px; left: 50%; transform: translateX(-50%); background: var(--gold); color: #000; padding: 2px 10px; border-radius: 4px; font-weight: bold; font-size: 0.9rem; white-space: nowrap; box-shadow: 0 2px 5px black; }
         .card-inner { position: relative; width: 100%; height: 100%; text-align: center; transition: transform 0.6s; transform-style: preserve-3d; }
@@ -95,9 +117,7 @@
         .vote-yes { color: green; font-weight: bold; }
         .vote-no { color: red; font-weight: bold; }
         .close-btn { margin-top: 15px; background: #5d4037; color: white; border: none; padding: 8px 20px; cursor: pointer; border-radius: 5px; }
-
         .toast { position: fixed; top: 15%; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.95); padding: 15px 40px; border-radius: 50px; border: 2px solid var(--gold); color: var(--gold); font-size: 1.4rem; animation: fadeInOut 3s forwards; z-index: 300; pointer-events: none; white-space: nowrap; }
-        @keyframes fadeInOut { 0% {opacity:0; transform:translate(-50%, -20px);} 10% {opacity:1; transform:translate(-50%, 0);} 90% {opacity:1;} 100% {opacity:0;} }
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.6.0/socket.io.min.js"></script>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
@@ -120,11 +140,14 @@
     <div id="game" :style="{display: joined ? 'block' : 'none'}">
         <div class="top-left-controls">
             <button class="control-btn" @click="showHistory = true">📜 戰況紀錄</button>
-            <button class="control-btn reset-btn" :class="{voted: hasResetVoted}" @click="requestReset">
+            <button class="control-btn reset-btn" :class="{voted: hasResetVoted}" @click="requestReset" v-if="!isSpectator">
                 {{ hasResetVoted ? '已請求重置' : '⚠ 請求重置' }}
             </button>
             <div v-if="resetVotesCount > 0" style="color:#aaa; font-size:0.8rem; text-align:center;">
-                重置: {{ resetVotesCount }} / {{ Math.floor(players.length/2) + 1 }}
+                重置: {{ resetVotesCount }} / {{ Math.floor(activePlayerCount/2) + 1 }}
+            </div>
+            <div v-if="isSpectator" style="color:#aaa; border:1px solid #666; padding:5px; border-radius:5px; margin-top:10px;">
+                👻 觀察者模式
             </div>
         </div>
 
@@ -141,30 +164,30 @@
                 <div class="table-logo" v-if="state !== 'LOBBY'">AVALON</div>
                 
                 <div class="settings-panel parchment-panel" v-if="state === 'LOBBY'">
-                    <div class="settings-title">遊戲設定 (房主可調)</div>
+                    <div class="settings-title">遊戲設定 (房主: {{hostName}})</div>
                     <div class="settings-group">
-                        <label class="role-check" :class="{disabled: !isMeFirst}">
-                            <input type="checkbox" v-model="localSettings.merlin" :disabled="!isMeFirst" @change="updateSettings"> 梅林
+                        <label class="role-check" :class="{disabled: !isMeHost}">
+                            <input type="checkbox" v-model="localSettings.merlin" :disabled="!isMeHost" @change="updateSettings"> 梅林
                         </label>
-                        <label class="role-check" :class="{disabled: !isMeFirst}">
-                            <input type="checkbox" v-model="localSettings.percival" :disabled="!isMeFirst" @change="updateSettings"> 派西維爾
+                        <label class="role-check" :class="{disabled: !isMeHost}">
+                            <input type="checkbox" v-model="localSettings.percival" :disabled="!isMeHost" @change="updateSettings"> 派西維爾
                         </label>
-                        <label class="role-check" :class="{disabled: !isMeFirst}">
-                            <input type="checkbox" v-model="localSettings.assassin" :disabled="!isMeFirst" @change="updateSettings"> 刺客
+                        <label class="role-check" :class="{disabled: !isMeHost}">
+                            <input type="checkbox" v-model="localSettings.assassin" :disabled="!isMeHost" @change="updateSettings"> 刺客
                         </label>
-                        <label class="role-check" :class="{disabled: !isMeFirst}">
-                            <input type="checkbox" v-model="localSettings.morgana" :disabled="!isMeFirst" @change="updateSettings"> 莫甘娜
+                        <label class="role-check" :class="{disabled: !isMeHost}">
+                            <input type="checkbox" v-model="localSettings.morgana" :disabled="!isMeHost" @change="updateSettings"> 莫甘娜
                         </label>
-                        <label class="role-check" :class="{disabled: !isMeFirst}">
-                            <input type="checkbox" v-model="localSettings.mordred" :disabled="!isMeFirst" @change="updateSettings"> 莫德雷德
+                        <label class="role-check" :class="{disabled: !isMeHost}">
+                            <input type="checkbox" v-model="localSettings.mordred" :disabled="!isMeHost" @change="updateSettings"> 莫德雷德
                         </label>
-                        <label class="role-check" :class="{disabled: !isMeFirst}">
-                            <input type="checkbox" v-model="localSettings.oberon" :disabled="!isMeFirst" @change="updateSettings"> 奧伯倫
+                        <label class="role-check" :class="{disabled: !isMeHost}">
+                            <input type="checkbox" v-model="localSettings.oberon" :disabled="!isMeHost" @change="updateSettings"> 奧伯倫
                         </label>
                     </div>
-                    <div class="balance-info">當前: {{ players.length }} 人 | 全員準備後自動開始</div>
+                    <div class="balance-info">當前: {{ activePlayerCount }} 人 | 全員準備後自動開始</div>
                     <div style="margin-top:15px; font-size:1.2rem; font-weight:bold;">
-                        準備狀態: {{readyCount}} / {{players.length}}
+                        準備狀態: {{readyCount}} / {{activePlayerCount}}
                     </div>
                 </div>
 
@@ -175,20 +198,22 @@
                     <div v-if="state === 'ASSASSINATION'" style="color:var(--red);">刺殺環節！<br><span style="font-size: 1rem">刺客請點擊頭像</span></div>
                     <div v-if="state === 'GAME_OVER'" style="color:var(--gold); font-size:2.5rem;">遊戲結束</div>
                 </div>
-                <div v-for="(p, index) in players" :key="p.token" class="seat" :class="{disconnected: !p.is_connected}" :style="getSeatStyle(index, players.length)">
+                <div v-for="(p, index) in activePlayers" :key="p.token" class="seat" :class="{disconnected: !p.is_connected}" :style="getSeatStyle(index, activePlayers.length)">
                     <div class="seat-inner">
                         <div class="avatar" :class="{leader: p.is_leader, 'in-team': p.in_team, 'kill-target': isAssassinationPhase && isMeAssassin && p.token !== myToken, 'ready': p.is_ready}" @click="handleAvatarClick(p)">
                             {{ p.avatar }}
                             <div class="vote-badge" v-if="state === 'TEAM_VOTING' && p.has_voted">📩</div>
                             <div class="vote-badge" v-if="state === 'MISSION' && p.in_team && p.has_voted">⚔️</div>
                             <div class="ready-badge" v-if="state === 'LOBBY' && p.is_ready">✔</div>
+                            <div class="host-badge" v-if="p.token === hostToken">👑</div>
+                            <div class="kick-badge" v-if="state === 'LOBBY' && isMeHost && p.token !== myToken" @click.stop="kickPlayer(p.token)">❌</div>
                         </div>
                         <div class="name-tag">{{ p.name }}</div>
                     </div>
                 </div>
             </div>
         </div>
-        <div class="action-panel">
+        <div class="action-panel" v-if="!isSpectator">
             <div v-if="state === 'LOBBY'">
                 <button class="action-btn btn-ready" :class="{'is-ready': isMeReady}" @click="toggleReady">
                     {{ isMeReady ? '取消準備' : '準備' }}
@@ -206,14 +231,26 @@
                 <button class="action-btn btn-reject" @click="voteMission(false)">🔥 失敗</button>
             </div>
         </div>
-        <div class="game-log" ref="logRef"><div v-for="(log, i) in logs" :key="i" :style="{color: log.color}"><span style="opacity:0.4; font-size:0.8em; margin-right:5px;">[{{log.time}}]</span><span v-html="log.msg"></span></div></div>
+        
+        <div class="chat-container">
+            <div class="chat-history" ref="chatRef">
+                <div v-for="(msg, i) in chatHistory" :key="i" class="chat-msg" :class="msg.type">
+                    <span class="chat-time">{{msg.time}}</span>
+                    <span v-html="msg.msg"></span>
+                </div>
+            </div>
+            <div class="chat-input-area">
+                <input v-model="chatInput" @keyup.enter="sendChat" class="chat-input" placeholder="輸入訊息...">
+                <button @click="sendChat" class="chat-send-btn">➤</button>
+            </div>
+        </div>
         
         <div class="bottom-right-container">
             <div class="notepad">
                 <div class="notepad-title">📝 隨身筆記</div>
                 <textarea v-model="notepadContent" placeholder="在此紀錄推理..."></textarea>
             </div>
-            <div class="card-container" :class="{flipped: cardFlipped}" @click="cardFlipped = !cardFlipped" v-if="myRole">
+            <div class="card-container" :class="{flipped: cardFlipped}" @click="cardFlipped = !cardFlipped" v-if="myRole && !isSpectator">
                 <div class="player-name-plate">{{ name }}</div>
                 <div class="card-inner">
                     <div class="card-front">?</div>
@@ -270,33 +307,60 @@
             const avatars = ['🦁','🦊','🐼','🐨','🐯','🐷','🐸','🐵', '🧙‍♂️', '🧝‍♀️'];
             const joined = ref(false); const myToken = ref(localStorage.getItem('avalon_token') || '');
             const state = ref('LOBBY'); const players = ref([]); const questResults = ref([null, null, null, null, null]);
-            const questIdx = ref(0); const teamSizeNeeded = ref(0); const voteTrack = ref(0); const logs = ref([]);
+            const questIdx = ref(0); const teamSizeNeeded = ref(0); const voteTrack = ref(0); 
             const myRole = ref(''); const teammates = ref([]); const cardFlipped = ref(false);
-            const mySelectedTeam = ref([]); const toastMsg = ref(''); const logRef = ref(null);
+            const mySelectedTeam = ref([]); const toastMsg = ref(''); 
             const localSettings = reactive({ merlin: true, percival: true, assassin: true, morgana: true, mordred: false, oberon: false });
-            const gameHistory = ref([]); 
-            const showHistory = ref(false);
+            const gameHistory = ref([]); const showHistory = ref(false);
+            const chatHistory = ref([]); const chatInput = ref(''); const chatRef = ref(null);
+            const isSpectator = ref(false);
+            const hostToken = ref(''); // [新增] 房主 Token
 
             const notepadContent = ref(localStorage.getItem('avalon_notes') || '');
             watch(notepadContent, (newVal) => { localStorage.setItem('avalon_notes', newVal); });
 
-            socket.on('join_success', (data) => { myToken.value = data.token; localStorage.setItem('avalon_token', data.token); joined.value = true; });
-            socket.on('new_log', (log) => { logs.value.push(log); nextTick(() => { if(logRef.value) logRef.value.scrollTop = logRef.value.scrollHeight; }); });
+            socket.on('join_success', (data) => { 
+                myToken.value = data.token; 
+                localStorage.setItem('avalon_token', data.token); 
+                isSpectator.value = data.is_spectator;
+                joined.value = true; 
+            });
+            socket.on('new_message', (msg) => { 
+                chatHistory.value.push(msg); 
+                nextTick(() => { if(chatRef.value) chatRef.value.scrollTop = chatRef.value.scrollHeight; }); 
+            });
             socket.on('mission_effect', (data) => { if(!data.success) { document.body.classList.add('shake'); setTimeout(() => document.body.classList.remove('shake'), 500); } });
             socket.on('update_state', (data) => {
                 state.value = data.state; players.value = data.players; questResults.value = data.quest_results;
                 questIdx.value = data.quest_idx; teamSizeNeeded.value = data.team_size_needed; voteTrack.value = data.vote_track;
-                if(data.logs) logs.value = data.logs;
+                hostToken.value = data.host_token; // [新增] 更新房主
+                if(data.chat_history) chatHistory.value = data.chat_history;
                 if(data.game_history) gameHistory.value = data.game_history;
                 if(data.state !== 'TEAM_SELECTION') mySelectedTeam.value = [];
-                if (data.settings && !isMeFirst.value) Object.assign(localSettings, data.settings);
+                // 如果不是房主，更新設定
+                if (data.settings && myToken.value !== hostToken.value) Object.assign(localSettings, data.settings);
             });
             socket.on('role_info', (data) => { myRole.value = data.role; teammates.value = data.teammates; cardFlipped.value = true; setTimeout(() => cardFlipped.value = false, 4000); });
             socket.on('vote_finished', (data) => showToast(data.pass ? "投票通過！" : "投票被否決！"));
             socket.on('game_over', (data) => showToast("遊戲結束: " + data.winner));
+            // [新增] 踢人通知
+            socket.on('kicked', (data) => {
+                alert(data.msg);
+                localStorage.removeItem('avalon_token'); // 清除 Token
+                location.reload(); // 重整頁面
+            });
+
+            const activePlayers = computed(() => players.value.filter(p => !p.is_spectator)); // 只算有座位的
+            const activePlayerCount = computed(() => activePlayers.value.length);
+            
+            // [修正] 判斷是否為房主
+            const isMeHost = computed(() => myToken.value === hostToken.value);
+            const hostName = computed(() => {
+                const host = players.value.find(p => p.token === hostToken.value);
+                return host ? host.name : 'Unknown';
+            });
 
             const isMeLeader = computed(() => { const me = players.value.find(p => p.token === myToken.value); return me && me.is_leader; });
-            const isMeFirst = computed(() => players.value.length > 0 && players.value[0].token === myToken.value);
             const amIInTeam = computed(() => { const me = players.value.find(p => p.token === myToken.value); return me && me.in_team; });
             const iHaveVoted = computed(() => { const me = players.value.find(p => p.token === myToken.value); return me && me.has_voted; });
             const hasToken = computed(() => !!myToken.value);
@@ -310,12 +374,14 @@
             const join = () => { if(!name.value) return alert("請輸入你的大名"); socket.emit('join_room', { name: name.value, room_id: roomId.value, avatar: avatar.value, token: myToken.value }); };
             const toggleReady = () => socket.emit('toggle_ready', roomId.value);
             const requestReset = () => { if(!hasResetVoted.value) socket.emit('request_reset', roomId.value); };
-            const updateSettings = () => { if(isMeFirst.value) socket.emit('update_settings', { room_id: roomId.value, settings: localSettings }); };
+            const updateSettings = () => { if(isMeHost.value) socket.emit('update_settings', { room_id: roomId.value, settings: localSettings }); };
+            const sendChat = () => { if(chatInput.value.trim()){ socket.emit('send_chat', {room_id: roomId.value, message: chatInput.value}); chatInput.value = ''; }};
+            const kickPlayer = (targetToken) => { if(confirm("確定要踢出此玩家嗎？")) socket.emit('kick_player', {room_id: roomId.value, target_token: targetToken}); };
+
             const toggleTeam = (token) => {
                 if(state.value !== 'TEAM_SELECTION' || !isMeLeader.value) return;
                 if(mySelectedTeam.value.includes(token)) mySelectedTeam.value = mySelectedTeam.value.filter(t => t !== token);
                 else if(mySelectedTeam.value.length < teamSizeNeeded.value) mySelectedTeam.value.push(token);
-                players.value.forEach(p => p.in_team = mySelectedTeam.value.includes(p.token));
             };
             const handleAvatarClick = (player) => {
                 if (state.value === 'TEAM_SELECTION') toggleTeam(player.token);
@@ -329,22 +395,27 @@
             const showToast = (msg) => { toastMsg.value = msg; setTimeout(() => toastMsg.value = '', 3000); };
             const isBadRole = (r) => ['刺客','莫甘娜','壞人','莫德雷德'].includes(r);
             const getLeaderName = () => players.value.find(p => p.is_leader)?.name || '';
+            
             const getSeatStyle = (index, total) => {
-                const myIndex = players.value.findIndex(p => p.token === myToken.value);
+                const myIndex = activePlayers.value.findIndex(p => p.token === myToken.value);
                 let relativeIndex = index;
-                if (myIndex !== -1) relativeIndex = (index - myIndex + total) % total;
+                const baseIndex = myIndex !== -1 ? myIndex : 0;
+                relativeIndex = (index - baseIndex + total) % total;
                 const angle = (relativeIndex / total) * 2 * Math.PI + Math.PI/2;
-                const radius = 43; const x = Math.cos(angle) * radius + 50; const y = Math.sin(angle) * radius + 50; return { left: x + '%', top: y + '%' };
+                const radius = 43; 
+                const x = Math.cos(angle) * radius + 50; 
+                const y = Math.sin(angle) * radius + 50; 
+                return { left: x + '%', top: y + '%' };
             };
 
             return { 
                 name, roomId, avatar, avatars, joined, hasToken, myToken, state, players, 
                 questResults, questIdx, teamSizeNeeded, voteTrack, logs, myRole, teammates, cardFlipped, 
-                notepadContent, hasResetVoted, resetVotesCount, isMeReady, readyCount, isMeFirst, localSettings,
-                gameHistory, showHistory,
-                join, toggleReady, requestReset, updateSettings, handleAvatarClick, submitTeam, voteTeam, voteMission, 
+                notepadContent, hasResetVoted, resetVotesCount, isMeReady, readyCount, isMeHost, hostToken, hostName, localSettings,
+                gameHistory, showHistory, chatHistory, chatInput, chatRef, isSpectator, activePlayers, activePlayerCount,
+                join, toggleReady, requestReset, updateSettings, kickPlayer, handleAvatarClick, submitTeam, voteTeam, voteMission, sendChat,
                 isMeLeader, mySelectedTeam, amIInTeam, iHaveVoted, isBadRole, getLeaderName, getSeatStyle, 
-                logRef, toastMsg, isAssassinationPhase, isMeAssassin 
+                toastMsg, isAssassinationPhase, isMeAssassin 
             };
         }
     }).mount('#app');
