@@ -9,24 +9,17 @@
         :root { --bg-dark: #121212; --gold: #ffd700; --blue: #29b6f6; --red: #ef5350; --green: #66bb6a; --parchment: #f3e5ab; --wood: #4e342e; }
         
         body { margin: 0; font-family: 'Noto Sans TC', sans-serif; background: #0f0f10 radial-gradient(circle at center, #1f1f2e 0%, #000 100%); color: white; overflow: hidden; height: 100vh; }
-        
-        /* 登入畫面 */
         #login { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); z-index: 200; position: fixed; top:0; width:100%; }
         .login-box { background: rgba(50,50,50,0.4); padding: 40px; border-radius: 20px; border: 1px solid #444; text-align: center; box-shadow: 0 10px 30px black; }
         h1 { font-family: 'Cinzel', serif; font-size: 3.5rem; color: var(--gold); text-shadow: 0 0 15px #ff8c00; margin-bottom: 20px;}
         input { padding: 15px; margin: 10px; border-radius: 8px; border: 1px solid #555; background: #222; color: white; width: 220px; text-align: center; font-size: 1.1rem;}
-        
-        /* 通用按鈕 */
         button { font-family: 'Cinzel', serif; letter-spacing: 1px; cursor: pointer; transition: 0.2s; }
         .btn-gold { background: linear-gradient(to bottom, #ffd700, #ff8c00); border: none; padding: 12px 30px; font-weight: bold; border-radius: 25px; box-shadow: 0 4px 0 #b86e00; color: #333; font-size: 1.2rem; }
         .btn-gold:active { transform: translateY(4px); box-shadow: 0 0 0 #b86e00; }
         .avatar-select span { font-size: 2.5rem; cursor: pointer; padding: 5px; opacity: 0.5; transition: 0.2s; display: inline-block;}
         .avatar-select span.selected { opacity: 1; transform: scale(1.2); text-shadow: 0 0 15px white; }
 
-        /* 遊戲介面 */
         #game { display: none; height: 100vh; position: relative; perspective: 1200px; }
-        
-        /* 頂部資訊列 */
         .top-bar { position: absolute; top: 0; width: 100%; display: flex; justify-content: center; padding-top: 20px; z-index: 10; pointer-events: none;}
         .quest-track { display: flex; gap: 15px; background: rgba(0,0,0,0.7); padding: 12px 30px; border-radius: 50px; border: 1px solid #555; pointer-events: auto;}
         .token { width: 55px; height: 55px; border-radius: 50%; background: #2a2a2a; border: 3px solid #555; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.2rem; box-shadow: inset 0 0 10px black; transition: 0.5s; position: relative; }
@@ -37,42 +30,24 @@
         .vote-dot { display: inline-block; width: 12px; height: 12px; border-radius: 50%; background: #333; margin-left: 5px; border: 1px solid #666;}
         .vote-dot.filled { background: var(--red); box-shadow: 0 0 8px var(--red); border-color: #ff8a80;}
         
-        /* 左上角功能鍵 */
         .top-left-controls { position: absolute; top: 20px; left: 20px; display: flex; flex-direction: column; gap: 10px; z-index: 100; pointer-events: auto; }
         .control-btn { background: rgba(50,50,50,0.8); color: white; border: 1px solid #666; padding: 8px 15px; border-radius: 5px; font-size: 0.9rem; width: 120px; text-align: left; }
         .control-btn:hover { background: rgba(80,80,80,0.9); }
         .reset-btn { background: #d32f2f; border-color: #b71c1c; }
         .reset-btn.voted { background: #555; cursor: default; }
 
-        /* [美化] 木紋圓桌 */
         .table-container { position: absolute; top: 55%; left: 50%; transform: translate(-50%, -50%) rotateX(25deg); width: 80vh; height: 80vh; transform-style: preserve-3d; }
-        .table-surface { 
-            width: 100%; height: 100%; border-radius: 50%; 
-            background: radial-gradient(#6d4c41, #3e2723); /* 基礎色 */
-            background-image: repeating-radial-gradient(circle at center, #6d4c41 0, #5d4037 2px, #6d4c41 4px); /* 模擬年輪 */
-            border: 20px solid #2d1e18; 
-            box-shadow: 0 30px 60px rgba(0,0,0,0.8), inset 0 0 100px rgba(0,0,0,0.9); 
-            position: relative; display: flex; align-items: center; justify-content: center; 
-        }
+        .table-surface { width: 100%; height: 100%; border-radius: 50%; background: radial-gradient(#6d4c41, #3e2723); background-image: repeating-radial-gradient(circle at center, #6d4c41 0, #5d4037 2px, #6d4c41 4px); border: 20px solid #2d1e18; box-shadow: 0 30px 60px rgba(0,0,0,0.8), inset 0 0 100px rgba(0,0,0,0.9); position: relative; display: flex; align-items: center; justify-content: center; }
         .table-logo { font-family: 'Cinzel', serif; font-size: 5rem; color: rgba(255,255,255,0.08); user-select: none; transform: rotateX(-25deg); }
 
-        /* [美化] 羊皮紙面板 (設定 & 戰況) */
-        .parchment-panel {
-            background: var(--parchment); color: #3e2723; border: 8px solid #4e342e; border-radius: 5px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.8), inset 0 0 50px rgba(161, 136, 127, 0.5);
-            font-family: 'Noto Sans TC', serif;
-        }
-        .settings-panel {
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotateX(-25deg);
-            padding: 20px; width: 320px; text-align: center; z-index: 50;
-        }
+        .parchment-panel { background: var(--parchment); color: #3e2723; border: 8px solid #4e342e; border-radius: 5px; box-shadow: 0 10px 30px rgba(0,0,0,0.8), inset 0 0 50px rgba(161, 136, 127, 0.5); font-family: 'Noto Sans TC', serif; }
+        .settings-panel { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotateX(-25deg); padding: 20px; width: 320px; text-align: center; z-index: 50; }
         .settings-title { font-size: 1.4rem; font-weight: bold; margin-bottom: 15px; border-bottom: 2px solid #5d4037; padding-bottom: 5px; }
         .settings-group { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-bottom: 10px; }
         .role-check { display: flex; align-items: center; font-size: 1rem; cursor: pointer; padding: 5px 10px; font-weight: bold; }
         .role-check input { width: auto; margin: 0 5px 0 0; accent-color: #5d4037; }
         .role-check.disabled { opacity: 0.5; cursor: default; }
 
-        /* 座位與玩家 */
         .seat { position: absolute; width: 100px; height: 120px; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; transform-origin: center center; transition: 0.5s; transform: translate(-50%, -50%); }
         .seat-inner { transform: rotateX(-25deg); display: flex; flex-direction: column; align-items: center; cursor: pointer; width: 100%;}
         .avatar { width: 65px; height: 65px; border-radius: 50%; background: #444; border: 3px solid #888; display: flex; align-items: center; justify-content: center; font-size: 2.2rem; box-shadow: 0 5px 15px rgba(0,0,0,0.6); position: relative; transition: 0.3s; z-index: 2;}
@@ -84,11 +59,7 @@
         .ready-badge { position: absolute; top: -5px; right: -5px; width: 24px; height: 24px; background: var(--green); color: white; border-radius: 50%; font-size: 14px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px black; border: 1px solid #fff; z-index: 3;}
         .vote-badge { position: absolute; bottom: -5px; right: -5px; width: 26px; height: 26px; background: #fff; border-radius: 50%; font-size: 16px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px black; border: 1px solid #333; z-index: 3;}
         .name-tag { background: rgba(0,0,0,0.8); padding: 4px 10px; border-radius: 12px; margin-top: 8px; font-size: 0.85rem; border: 1px solid #555; color: #ddd; max-width: 90px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: center; }
-
-        /* 狀態文字 */
         .status-msg { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -120%) rotateX(-25deg); font-size: 1.8rem; text-shadow: 0 3px 8px black; text-align: center; width: 400px; pointer-events: none; z-index: 20; font-family: 'Cinzel', serif; }
-        
-        /* 底部操作面板 */
         .action-panel { position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%); display: flex; gap: 25px; z-index: 50; }
         .action-btn { padding: 15px 40px; font-size: 1.2rem; border-radius: 50px; border: none; font-weight: bold; cursor: pointer; box-shadow: 0 10px 20px rgba(0,0,0,0.6); transition: 0.2s; font-family: 'Cinzel', serif; text-transform: uppercase; }
         .btn-approve { background: linear-gradient(to bottom, #66bb6a, #43a047); color: white; border: 2px solid #2e7d32; }
@@ -96,18 +67,14 @@
         .btn-ready { background: linear-gradient(to bottom, #7e57c2, #5e35b1); color: white; border: 2px solid #4527a0; }
         .btn-ready.is-ready { background: linear-gradient(to bottom, #444, #333); color: #aaa; border: 2px solid #222; }
         .action-btn:hover { transform: translateY(-3px) scale(1.05); filter: brightness(1.1); }
-        
-        /* 遊戲紀錄 (Log) */
         .game-log { position: absolute; bottom: 20px; left: 20px; width: 320px; height: 220px; background: rgba(20, 20, 20, 0.85); border: 1px solid #555; border-radius: 12px; overflow-y: auto; padding: 15px; font-size: 0.9rem; z-index: 40; font-family: monospace; backdrop-filter: blur(5px); box-shadow: 0 5px 20px rgba(0,0,0,0.5); }
         .game-log div { margin-bottom: 6px; padding-bottom: 6px; border-bottom: 1px solid rgba(255,255,255,0.08); line-height: 1.4; }
         
-        /* 右下角區塊 */
         .bottom-right-container { position: absolute; bottom: 20px; right: 20px; display: flex; align-items: flex-end; gap: 10px; z-index: 50; }
         .notepad { width: 200px; height: 220px; background: var(--parchment); color: #3e2723; border: 4px solid #4e342e; border-radius: 5px; padding: 10px; display: flex; flex-direction: column; transition: 0.3s; box-shadow: 0 5px 15px black;}
         .notepad textarea { width: 100%; height: 100%; background: transparent; border: none; color: #3e2723; resize: none; font-family: 'Noto Sans TC', monospace; outline: none; font-size: 0.9rem; font-weight: bold; }
         .notepad-title { font-size: 0.8rem; color: #5d4037; margin-bottom: 5px; border-bottom: 1px solid #a1887f; font-weight: bold;}
         
-        /* 卡片 */
         .card-container { width: 150px; height: 220px; perspective: 1000px; cursor: pointer; position: relative; }
         .player-name-plate { position: absolute; top: -30px; left: 50%; transform: translateX(-50%); background: var(--gold); color: #000; padding: 2px 10px; border-radius: 4px; font-weight: bold; font-size: 0.9rem; white-space: nowrap; box-shadow: 0 2px 5px black; }
         .card-inner { position: relative; width: 100%; height: 100%; text-align: center; transition: transform 0.6s; transform-style: preserve-3d; }
@@ -119,7 +86,6 @@
         .role-title { font-size: 1.6rem; font-weight: bold; margin-bottom: 15px; border-bottom: 2px solid #555; width: 80%; }
         .role-desc { font-size: 0.85rem; padding: 0 10px; line-height: 1.5; color: #444; font-weight: bold;}
 
-        /* [新增] 戰況表 Modal */
         .modal-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.7); z-index: 200; display: flex; justify-content: center; align-items: center; }
         .modal-history { width: 80%; max-width: 600px; max-height: 80vh; overflow-y: auto; padding: 20px; }
         .history-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
@@ -249,7 +215,19 @@
             </div>
             <div class="card-container" :class="{flipped: cardFlipped}" @click="cardFlipped = !cardFlipped" v-if="myRole">
                 <div class="player-name-plate">{{ name }}</div>
-                <div class="card-inner"><div class="card-front">?</div><div class="card-back" :class="{bad: isBadRole(myRole)}"><div class="role-title">{{ myRole }}</div><div class="role-desc"><div v-if="teammates.length"><span style="display:block; margin-bottom:5px; opacity:0.6">你的視野</span>{{ teammates.join(', ') }}</div><div v-else><span style="opacity:0.6">無特殊視野</span></div></div></div></div>
+                <div class="card-inner">
+                    <div class="card-front">?</div>
+                    <div class="card-back" :class="{bad: isBadRole(myRole)}">
+                        <div class="role-title">{{ myRole }}</div>
+                        <div class="role-desc">
+                            <div v-if="teammates.length"><span style="display:block; margin-bottom:5px; opacity:0.6">你的視野</span>{{ teammates.join(', ') }}</div>
+                            <div v-else>
+                                <span v-if="myRole === '梅林'" style="opacity:0.6; color:#ef5350">無可見壞人 (可能只有莫德雷德)</span>
+                                <span v-else style="opacity:0.6">無特殊視野</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
         
@@ -296,8 +274,8 @@
             const myRole = ref(''); const teammates = ref([]); const cardFlipped = ref(false);
             const mySelectedTeam = ref([]); const toastMsg = ref(''); const logRef = ref(null);
             const localSettings = reactive({ merlin: true, percival: true, assassin: true, morgana: true, mordred: false, oberon: false });
-            const gameHistory = ref([]); // 戰況紀錄
-            const showHistory = ref(false); // 顯示戰況表
+            const gameHistory = ref([]); 
+            const showHistory = ref(false);
 
             const notepadContent = ref(localStorage.getItem('avalon_notes') || '');
             watch(notepadContent, (newVal) => { localStorage.setItem('avalon_notes', newVal); });
