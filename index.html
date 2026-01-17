@@ -4,11 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Avalon Online</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/3.3.4/vue.global.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Noto+Sans+TC:wght@400;700&display=swap');
         :root { --bg-dark: #121212; --gold: #ffd700; --blue: #29b6f6; --red: #ef5350; --green: #66bb6a; --parchment: #f3e5ab; --wood: #4e342e; }
         
         body { margin: 0; font-family: 'Noto Sans TC', sans-serif; background: #0f0f10 radial-gradient(circle at center, #1f1f2e 0%, #000 100%); color: white; overflow: hidden; height: 100vh; }
+        
+        #loading-mask { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 9999; display: flex; justify-content: center; align-items: center; color: var(--gold); font-size: 2rem; font-family: 'Cinzel', serif; flex-direction: column; }
+        [v-cloak] { display: none; } 
+
         #login { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); z-index: 200; position: fixed; top:0; width:100%; }
         .login-box { background: rgba(50,50,50,0.4); padding: 40px; border-radius: 20px; border: 1px solid #444; text-align: center; box-shadow: 0 10px 30px black; }
         h1 { font-family: 'Cinzel', serif; font-size: 3.5rem; color: var(--gold); text-shadow: 0 0 15px #ff8c00; margin-bottom: 20px;}
@@ -32,6 +38,7 @@
         
         .top-left-controls { position: absolute; top: 20px; left: 20px; display: flex; flex-direction: column; gap: 10px; z-index: 100; pointer-events: auto; }
         .control-btn { background: rgba(50,50,50,0.8); color: white; border: 1px solid #666; padding: 8px 15px; border-radius: 5px; font-size: 0.9rem; width: 120px; text-align: left; }
+        .control-btn:hover { background: rgba(80,80,80,0.9); }
         .reset-btn { background: #d32f2f; border-color: #b71c1c; }
         .reset-btn.voted { background: #555; cursor: default; }
 
@@ -55,11 +62,9 @@
         .avatar.in-team { border-color: var(--blue); box-shadow: 0 0 25px var(--blue); transform: scale(1.15); }
         .avatar.kill-target { border-color: var(--red); box-shadow: 0 0 30px var(--red); animation: pulse 1s infinite; cursor: crosshair; }
         .avatar.ready { border-color: var(--green); box-shadow: 0 0 20px var(--green); }
-        
         .ready-badge { position: absolute; top: -5px; right: -5px; width: 24px; height: 24px; background: var(--green); color: white; border-radius: 50%; font-size: 14px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px black; border: 1px solid #fff; z-index: 3;}
         .vote-badge { position: absolute; bottom: -5px; right: -5px; width: 26px; height: 26px; background: #fff; border-radius: 50%; font-size: 16px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px black; border: 1px solid #333; z-index: 3;}
         .name-tag { background: rgba(0,0,0,0.8); padding: 4px 10px; border-radius: 12px; margin-top: 8px; font-size: 0.85rem; border: 1px solid #555; color: #ddd; max-width: 90px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: center; }
-        
         .host-badge { position: absolute; top: -25px; left: 50%; transform: translateX(-50%); font-size: 24px; text-shadow: 0 2px 5px black; z-index: 10; animation: float 2s infinite ease-in-out;}
         @keyframes float { 0%, 100% {transform:translateX(-50%) translateY(0);} 50% {transform:translateX(-50%) translateY(-5px);} }
         .kick-badge { position: absolute; top: -5px; right: -15px; width: 24px; height: 24px; background: #d32f2f; color: white; border-radius: 50%; font-size: 12px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px black; border: 1px solid #fff; z-index: 4; cursor: pointer; }
@@ -90,6 +95,7 @@
         .notepad { width: 200px; height: 220px; background: var(--parchment); color: #3e2723; border: 4px solid #4e342e; border-radius: 5px; padding: 10px; display: flex; flex-direction: column; transition: 0.3s; box-shadow: 0 5px 15px black;}
         .notepad textarea { width: 100%; height: 100%; background: transparent; border: none; color: #3e2723; resize: none; font-family: 'Noto Sans TC', monospace; outline: none; font-size: 0.9rem; font-weight: bold; }
         .notepad-title { font-size: 0.8rem; color: #5d4037; margin-bottom: 5px; border-bottom: 1px solid #a1887f; font-weight: bold;}
+        
         .card-container { width: 150px; height: 220px; perspective: 1000px; cursor: pointer; position: relative; }
         .player-name-plate { position: absolute; top: -30px; left: 50%; transform: translateX(-50%); background: var(--gold); color: #000; padding: 2px 10px; border-radius: 4px; font-weight: bold; font-size: 0.9rem; white-space: nowrap; box-shadow: 0 2px 5px black; }
         .card-inner { position: relative; width: 100%; height: 100%; text-align: center; transition: transform 0.6s; transform-style: preserve-3d; }
@@ -98,8 +104,20 @@
         .card-front { background: #2d1e18 repeating-linear-gradient(45deg, #3e2723 0, #3e2723 10px, #2d1e18 10px, #2d1e18 20px); color: #6d4c41; font-size: 4rem; text-shadow: 1px 1px 0 rgba(255,255,255,0.1); }
         .card-back { background: linear-gradient(135deg, #fffde7, #fff9c4); color: #333; transform: rotateY(180deg); border: 4px solid var(--gold); }
         .card-back.bad { background: linear-gradient(135deg, #ffcdd2, #e57373); border-color: var(--red); }
-        .role-title { font-size: 1.6rem; font-weight: bold; margin-bottom: 15px; border-bottom: 2px solid #555; width: 80%; }
-        .role-desc { font-size: 0.85rem; padding: 0 10px; line-height: 1.5; color: #444; font-weight: bold;}
+        .role-img { width: 100%; height: 100%; object-fit: cover; border-radius: 8px; }
+        .card-back.has-image { padding: 0; border: none; background: none; }
+        
+        /* [新增] 翻面按鈕與文字詳情樣式 */
+        .toggle-btn {
+            position: absolute; bottom: 5px; left: 50%; transform: translateX(-50%);
+            background: rgba(0,0,0,0.7); color: white; border: 1px solid #aaa;
+            padding: 4px 10px; border-radius: 15px; font-size: 0.8rem; cursor: pointer; z-index: 10;
+            white-space: nowrap; font-weight: bold;
+        }
+        .toggle-btn:hover { background: var(--gold); color: black; }
+        .role-title { font-size: 1.4rem; font-weight: bold; margin-bottom: 10px; border-bottom: 2px solid #555; width: 80%; }
+        .role-desc { font-size: 0.9rem; padding: 0 10px; line-height: 1.5; color: #444; font-weight: bold;}
+        .vision-box { margin-top: 15px; padding: 8px; background: rgba(0,0,0,0.05); border-radius: 5px; width: 90%; font-size: 0.85rem; color: #333; border: 1px dashed #888; }
 
         .modal-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.7); z-index: 200; display: flex; justify-content: center; align-items: center; }
         .modal-history { width: 80%; max-width: 600px; max-height: 80vh; overflow-y: auto; padding: 20px; }
@@ -112,11 +130,14 @@
         .close-btn { margin-top: 15px; background: #5d4037; color: white; border: none; padding: 8px 20px; cursor: pointer; border-radius: 5px; }
         .toast { position: fixed; top: 15%; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.95); padding: 15px 40px; border-radius: 50px; border: 2px solid var(--gold); color: var(--gold); font-size: 1.4rem; animation: fadeInOut 3s forwards; z-index: 300; pointer-events: none; white-space: nowrap; }
     </style>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.6.0/socket.io.min.js"></script>
-    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
 </head>
 <body>
-<div id="app">
+<div id="loading-mask">
+    <div>🚀 正在啟動阿瓦隆...</div>
+    <div style="font-size:1rem; margin-top:10px; color:#aaa">如果卡在此畫面，請按 F12 檢查 Console 錯誤</div>
+</div>
+
+<div id="app" v-cloak>
     <div id="login" v-if="!joined">
         <div class="login-box">
             <h1>AVALON</h1>
@@ -240,22 +261,33 @@
         
         <div class="bottom-right-container">
             <div class="notepad">
-                <div class="notepad-title">📝 隨身筆記</div>
+                <div class="notepad-title">📝 隨身筆記 (不會被重置)</div>
                 <textarea v-model="notepadContent" placeholder="在此紀錄推理..."></textarea>
             </div>
-            <div class="card-container" :class="{flipped: cardFlipped}" @click="cardFlipped = !cardFlipped" v-if="myRole && !isSpectator">
+            <div class="card-container" :class="{flipped: cardFlipped}" @click="cardFlipped = !cardFlipped" v-if="state !== 'LOBBY' && myRole && !isSpectator">
                 <div class="player-name-plate">{{ name }}</div>
                 <div class="card-inner">
                     <div class="card-front">?</div>
-                    <div class="card-back" :class="{bad: isBadRole(myRole)}">
-                        <div class="role-title">{{ myRole }}</div>
-                        <div class="role-desc">
-                            <div v-if="teammates.length"><span style="display:block; margin-bottom:5px; opacity:0.6">你的視野</span>{{ teammates.join(', ') }}</div>
-                            <div v-else>
-                                <span v-if="myRole === '梅林'" style="opacity:0.6; color:#ef5350">無可見壞人 (可能只有莫德雷德)</span>
-                                <span v-else style="opacity:0.6">無特殊視野</span>
-                            </div>
+                    
+                    <div class="card-back" :class="{bad: isBadRole(myRole), 'has-image': roleImages[myRole] && !showCardText}">
+                        
+                        <div v-if="roleImages[myRole] && !showCardText" style="width:100%; height:100%;">
+                            <img :src="roleImages[myRole]" class="role-img">
+                            <div class="toggle-btn" @click.stop="toggleCardMode">🔄 查看技能與視野</div>
                         </div>
+
+                        <div v-else style="width:100%; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center;">
+                            <div class="role-title">{{ myRole }}</div>
+                            <div class="role-desc">
+                                {{ getRoleDesc(myRole) }}
+                            </div>
+                            <div class="vision-box" v-if="teammates.length || myRole === '梅林'">
+                                <div v-if="teammates.length"><strong>你的視野:</strong><br>{{ teammates.join(', ') }}</div>
+                                <div v-else-if="myRole === '梅林'" style="color:#ef5350">無可見壞人 (可能只有莫德雷德)</div>
+                            </div>
+                            <div class="toggle-btn" @click.stop="toggleCardMode" v-if="roleImages[myRole]">🔄 返回圖片</div>
+                        </div>
+
                     </div>
                 </div>
             </div>
@@ -292,56 +324,91 @@
     </div>
 </div>
 <script>
+    const { createApp, ref, computed, nextTick, watch, reactive, onMounted } = Vue;
     const socket = io();
-    const { createApp, ref, computed, nextTick, watch, reactive } = Vue;
+
     createApp({
         setup() {
             const name = ref(''); const roomId = ref('101'); const avatar = ref('🦁');
             const avatars = ['🦁','🦊','🐼','🐨','🐯','🐷','🐸','🐵', '🧙‍♂️', '🧝‍♀️'];
             const joined = ref(false); const myToken = ref(localStorage.getItem('avalon_token') || '');
             const state = ref('LOBBY'); const players = ref([]); const questResults = ref([null, null, null, null, null]);
-            const questIdx = ref(0); const teamSizeNeeded = ref(0); const voteTrack = ref(0); const logs = ref([]);
+            const questIdx = ref(0); const teamSizeNeeded = ref(0); const voteTrack = ref(0); 
             const myRole = ref(''); const teammates = ref([]); const cardFlipped = ref(false);
             const mySelectedTeam = ref([]); const toastMsg = ref(''); 
             const localSettings = reactive({ merlin: true, percival: true, assassin: true, morgana: true, mordred: false, oberon: false });
             const gameHistory = ref([]); const showHistory = ref(false);
             const chatHistory = ref([]); const chatInput = ref(''); const chatRef = ref(null);
             const isSpectator = ref(false); const hostToken = ref('');
+            
+            // [新增] 卡牌文字切換控制
+            const showCardText = ref(false);
+            const toggleCardMode = () => { showCardText.value = !showCardText.value; };
+
+            const roleImages = {
+                '梅林': 'img/merlin.jpg', '派西維爾': 'img/percival.jpg', '刺客': 'img/assassin.jpg',
+                '莫甘娜': 'img/morgana.jpg', '莫德雷德': 'img/mordred.jpg', '奧伯倫': 'img/oberon.jpg',
+                '忠臣': 'img/loyal.jpg', '壞人': 'img/minion.jpg'
+            };
+
+            const roleDescriptions = {
+                '梅林': '你的任務是帶領好人獲勝。你知道誰是邪惡方，但必須隱藏好自己身分，以免被刺客刺殺。',
+                '派西維爾': '你的任務是保護梅林。你能看見梅林和莫甘娜，但不知道誰是真梅林。',
+                '忠臣': '你的任務是幫助好人隊伍讓任務成功。你沒有特殊能力，請展現你的邏輯與判斷。',
+                '刺客': '你的任務是讓任務失敗。如果不幸好人方獲勝，你還有最後機會刺殺梅林來反敗為勝。',
+                '莫甘娜': '你的任務是假扮成梅林，混淆派西維爾的視聽。',
+                '莫德雷德': '你的任務是隱藏自己。梅林看不見你，這讓你成為最危險的壞人。',
+                '奧伯倫': '你的任務是讓任務失敗。你是孤獨的壞人，看不見隊友，隊友也看不見你。',
+                '壞人': '你的任務是讓任務失敗。盡力隱藏自己並協助隊友。'
+            };
+
+            const getRoleDesc = (role) => roleDescriptions[role] || "無描述";
 
             const notepadContent = ref(localStorage.getItem('avalon_notes') || '');
             watch(notepadContent, (newVal) => { localStorage.setItem('avalon_notes', newVal); });
 
-            socket.on('join_success', (data) => { 
-                myToken.value = data.token; 
-                localStorage.setItem('avalon_token', data.token); 
-                isSpectator.value = data.is_spectator;
-                joined.value = true; 
+            onMounted(() => {
+                const loader = document.getElementById('loading-mask');
+                if (loader) loader.style.display = 'none';
             });
-            socket.on('new_message', (msg) => { 
-                chatHistory.value.push(msg); 
-                nextTick(() => { if(chatRef.value) chatRef.value.scrollTop = chatRef.value.scrollHeight; }); 
-            });
-            socket.on('mission_effect', (data) => { if(!data.success) { document.body.classList.add('shake'); setTimeout(() => document.body.classList.remove('shake'), 500); } });
-            socket.on('update_state', (data) => {
-                state.value = data.state; players.value = data.players; questResults.value = data.quest_results;
-                questIdx.value = data.quest_idx; teamSizeNeeded.value = data.team_size_needed; voteTrack.value = data.vote_track;
-                hostToken.value = data.host_token;
-                if(data.chat_history) chatHistory.value = data.chat_history;
-                if(data.game_history) gameHistory.value = data.game_history;
-                if(data.state !== 'TEAM_SELECTION') mySelectedTeam.value = [];
-                if (data.settings && myToken.value !== hostToken.value) Object.assign(localSettings, data.settings);
-            });
-            socket.on('role_info', (data) => { myRole.value = data.role; teammates.value = data.teammates; cardFlipped.value = true; setTimeout(() => cardFlipped.value = false, 4000); });
-            socket.on('vote_finished', (data) => showToast(data.pass ? "投票通過！" : "投票被否決！"));
-            socket.on('game_over', (data) => showToast("遊戲結束: " + data.winner));
-            socket.on('kicked', (data) => { alert(data.msg); localStorage.removeItem('avalon_token'); location.reload(); });
+
+            try {
+                socket.on('join_success', (data) => { 
+                    myToken.value = data.token; 
+                    localStorage.setItem('avalon_token', data.token); 
+                    isSpectator.value = data.is_spectator;
+                    joined.value = true; 
+                });
+                socket.on('new_message', (msg) => { 
+                    chatHistory.value.push(msg); 
+                    nextTick(() => { if(chatRef.value) chatRef.value.scrollTop = chatRef.value.scrollHeight; }); 
+                });
+                socket.on('mission_effect', (data) => { if(!data.success) { document.body.classList.add('shake'); setTimeout(() => document.body.classList.remove('shake'), 500); } });
+                socket.on('update_state', (data) => {
+                    state.value = data.state; players.value = data.players; questResults.value = data.quest_results;
+                    questIdx.value = data.quest_idx; teamSizeNeeded.value = data.team_size_needed; voteTrack.value = data.vote_track;
+                    hostToken.value = data.host_token;
+                    if(data.chat_history) chatHistory.value = data.chat_history;
+                    if(data.game_history) gameHistory.value = data.game_history;
+                    if(data.state !== 'TEAM_SELECTION') mySelectedTeam.value = [];
+                    if (data.settings && myToken.value !== hostToken.value) Object.assign(localSettings, data.settings);
+                    if (data.state === 'LOBBY') { 
+                        myRole.value = ''; cardFlipped.value = false; showCardText.value = false; 
+                    }
+                });
+                socket.on('role_info', (data) => { myRole.value = data.role; teammates.value = data.teammates; cardFlipped.value = true; setTimeout(() => cardFlipped.value = false, 4000); });
+                socket.on('vote_finished', (data) => showToast(data.pass ? "投票通過！" : "投票被否決！"));
+                socket.on('game_over', (data) => showToast("遊戲結束: " + data.winner));
+                socket.on('kicked', (data) => { alert(data.msg); localStorage.removeItem('avalon_token'); location.reload(); });
+            } catch (err) {
+                console.error("Socket error:", err);
+                alert("連線發生錯誤，請檢查 Console");
+            }
 
             const activePlayers = computed(() => players.value.filter(p => !p.is_spectator));
             const activePlayerCount = computed(() => activePlayers.value.length);
-            
             const isMeHost = computed(() => myToken.value === hostToken.value);
             const hostName = computed(() => { const host = players.value.find(p => p.token === hostToken.value); return host ? host.name : 'Unknown'; });
-
             const isMeLeader = computed(() => { const me = players.value.find(p => p.token === myToken.value); return me && me.is_leader; });
             const amIInTeam = computed(() => { const me = players.value.find(p => p.token === myToken.value); return me && me.in_team; });
             const iHaveVoted = computed(() => { const me = players.value.find(p => p.token === myToken.value); return me && me.has_voted; });
@@ -359,7 +426,6 @@
             const updateSettings = () => { if(isMeHost.value) socket.emit('update_settings', { room_id: roomId.value, settings: localSettings }); };
             const sendChat = () => { if(chatInput.value.trim()){ socket.emit('send_chat', {room_id: roomId.value, message: chatInput.value}); chatInput.value = ''; }};
             const kickPlayer = (targetToken) => { if(confirm("確定要踢出此玩家嗎？")) socket.emit('kick_player', {room_id: roomId.value, target_token: targetToken}); };
-
             const toggleTeam = (token) => {
                 if(state.value !== 'TEAM_SELECTION' || !isMeLeader.value) return;
                 if(mySelectedTeam.value.includes(token)) mySelectedTeam.value = mySelectedTeam.value.filter(t => t !== token);
@@ -377,27 +443,24 @@
             const showToast = (msg) => { toastMsg.value = msg; setTimeout(() => toastMsg.value = '', 3000); };
             const isBadRole = (r) => ['刺客','莫甘娜','壞人','莫德雷德'].includes(r);
             const getLeaderName = () => players.value.find(p => p.is_leader)?.name || '';
-            
             const getSeatStyle = (index, total) => {
                 const myIndex = activePlayers.value.findIndex(p => p.token === myToken.value);
                 let relativeIndex = index;
                 const baseIndex = myIndex !== -1 ? myIndex : 0;
                 relativeIndex = (index - baseIndex + total) % total;
                 const angle = (relativeIndex / total) * 2 * Math.PI + Math.PI/2;
-                const radius = 43; 
-                const x = Math.cos(angle) * radius + 50; 
-                const y = Math.sin(angle) * radius + 50; 
-                return { left: x + '%', top: y + '%' };
+                const radius = 43; const x = Math.cos(angle) * radius + 50; const y = Math.sin(angle) * radius + 50; return { left: x + '%', top: y + '%' };
             };
 
             return { 
                 name, roomId, avatar, avatars, joined, hasToken, myToken, state, players, 
-                questResults, questIdx, teamSizeNeeded, voteTrack, logs, myRole, teammates, cardFlipped, 
+                questResults, questIdx, teamSizeNeeded, voteTrack, myRole, teammates, cardFlipped, 
                 notepadContent, hasResetVoted, resetVotesCount, isMeReady, readyCount, isMeHost, hostToken, hostName, localSettings,
                 gameHistory, showHistory, chatHistory, chatInput, chatRef, isSpectator, activePlayers, activePlayerCount,
+                showCardText, toggleCardMode, getRoleDesc,
                 join, toggleReady, requestReset, updateSettings, kickPlayer, handleAvatarClick, submitTeam, voteTeam, voteMission, sendChat,
                 isMeLeader, mySelectedTeam, amIInTeam, iHaveVoted, isBadRole, getLeaderName, getSeatStyle, 
-                toastMsg, isAssassinationPhase, isMeAssassin 
+                toastMsg, isAssassinationPhase, isMeAssassin, roleImages 
             };
         }
     }).mount('#app');
