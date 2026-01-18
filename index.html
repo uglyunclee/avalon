@@ -8,7 +8,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/3.3.4/vue.global.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Noto+Sans+TC:wght@400;700&display=swap');
-        :root { --bg-dark: #121212; --gold: #ffd700; --blue: #29b6f6; --red: #ef5350; --green: #66bb6a; --parchment: #f3e5ab; --wood: #4e342e; }
+        :root { --bg-dark: #121212; --gold: #ffd700; --blue: #00e5ff; --red: #ff5252; --green: #66bb6a; --parchment: #f3e5ab; --wood: #4e342e; }
         
         body { margin: 0; font-family: 'Noto Sans TC', sans-serif; background: #0f0f10 radial-gradient(circle at center, #1f1f2e 0%, #000 100%); color: white; overflow: hidden; height: 100vh; }
         #loading-mask { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 9999; display: flex; justify-content: center; align-items: center; color: var(--gold); font-size: 2rem; font-family: 'Cinzel', serif; flex-direction: column; }
@@ -34,10 +34,11 @@
         #game { display: none; height: 100vh; position: relative; perspective: 1200px; }
         .top-bar { position: absolute; top: 0; width: 100%; display: flex; justify-content: center; padding-top: 20px; z-index: 10; pointer-events: none;}
         .quest-track { display: flex; gap: 15px; background: rgba(0,0,0,0.7); padding: 12px 30px; border-radius: 50px; border: 1px solid #555; pointer-events: auto;}
-        .token { width: 55px; height: 55px; border-radius: 50%; background: #2a2a2a; border: 3px solid #555; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.2rem; box-shadow: inset 0 0 10px black; transition: 0.5s; position: relative; color: #aaa; }
-        .token.active { border-color: var(--gold); box-shadow: 0 0 20px var(--gold); transform: scale(1.1); background: #333; color: white;}
-        .token.success { background: #29b6f6; border-color: #81d4fa; box-shadow: 0 0 20px #03a9f4; color: transparent; } 
-        .token.fail { background: #ef5350; border-color: #e57373; box-shadow: 0 0 20px #f44336; color: transparent; } 
+        
+        .token { width: 60px; height: 60px; border-radius: 50%; background: #2a2a2a; border: 3px solid #555; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.4rem; box-shadow: inset 0 0 10px black; transition: 0.5s; position: relative; color: #aaa; }
+        .token.active { border-color: var(--gold); box-shadow: 0 0 20px var(--gold); transform: scale(1.15); background: #333; color: white;}
+        .token.success { background: linear-gradient(135deg, #1e88e5, #1565c0); border-color: #90caf9; box-shadow: 0 0 25px #03a9f4; color: white; font-size: 2rem; } 
+        .token.fail { background: linear-gradient(135deg, #e53935, #c62828); border-color: #ef9a9a; box-shadow: 0 0 25px #f44336; color: white; font-size: 2rem; } 
 
         .vote-track { position: absolute; top: 20px; right: 20px; font-size: 0.9rem; color: #aaa; text-align: right; pointer-events: auto;}
         .vote-dot { display: inline-block; width: 12px; height: 12px; border-radius: 50%; background: #333; margin-left: 5px; border: 1px solid #666;}
@@ -50,35 +51,36 @@
         .reset-btn.voted { background: #555; cursor: default; }
         .room-info-badge { background: rgba(41, 182, 246, 0.2); border: 1px solid var(--blue); color: var(--blue); padding: 5px 10px; border-radius: 5px; font-size: 0.9rem; text-align: center; margin-bottom: 5px; font-weight: bold; }
 
-        /* 橢圓桌 */
         .table-container { 
-            position: absolute; top: 50%; left: 50%; 
+            position: absolute; top: 45%; left: 50%; /* 桌子上移 */
             transform: translate(-50%, -50%) rotateX(25deg); 
             width: 90vh; height: 75vh; 
             transform-style: preserve-3d; 
+            z-index: 1;
         }
         .table-surface { width: 100%; height: 100%; border-radius: 50%; background: radial-gradient(#6d4c41, #3e2723); background-image: repeating-radial-gradient(circle at center, #6d4c41 0, #5d4037 2px, #6d4c41 4px); border: 20px solid #2d1e18; box-shadow: 0 30px 60px rgba(0,0,0,0.8), inset 0 0 100px rgba(0,0,0,0.9); position: relative; display: flex; align-items: center; justify-content: center; }
         .table-logo { font-family: 'Cinzel', serif; font-size: 5rem; color: rgba(255,255,255,0.08); user-select: none; transform: rotateX(-25deg); }
 
-        /* [修改] 按鈕區：畫面最右側，筆記本上方 */
         .lobby-button-area {
             position: fixed; 
-            bottom: 400px; 
-            right: 20px;   /* 貼近右側邊緣 */
+            bottom: 380px; 
+            left: 800px; 
+            transform: translateX(-50%);
             width: 200px;
             display: flex; flex-direction: column; gap: 10px; 
             align-items: center; 
             z-index: 2000;
-            pointer-events: none;
+            pointer-events: none; 
         }
         
         .ready-toggle-btn {
             padding: 10px 20px; border-radius: 30px; font-weight: bold; cursor: pointer;
             border: 2px solid #555; background: rgba(20,20,20,0.9); color: #ccc;
             transition: 0.3s; font-size: 1rem; white-space: nowrap; box-shadow: 0 5px 15px rgba(0,0,0,0.5);
-            pointer-events: auto; width: 100%;
+            pointer-events: auto; width: 100%; 
         }
         .ready-toggle-btn.is-ready { background: var(--green); color: white; border-color: #fff; box-shadow: 0 0 20px var(--green); }
+        .ready-toggle-btn.is-ready:hover { background: #43a047; }
         .ready-toggle-btn:hover { transform: scale(1.05); filter: brightness(1.1); }
 
         .start-game-btn {
@@ -91,6 +93,10 @@
         .waiting-text {
             color: #aaa; background: rgba(0,0,0,0.7); padding: 8px 15px; border-radius: 10px;
             font-size: 0.9rem; white-space: nowrap; pointer-events: auto;
+        }
+        .rule-hint {
+            position: fixed; top: 120px; left: 50%; transform: translateX(-50%);
+            color: #aaa; font-size: 0.9rem; text-shadow: 0 1px 2px black; pointer-events: none;
         }
         
         @keyframes pulse { 0% {transform:scale(1);} 50% {transform:scale(1.05);} 100% {transform:scale(1);} }
@@ -107,17 +113,42 @@
         .role-blue { color: #0277bd; }
         .role-red { color: #c62828; }
 
-        .seat { position: absolute; width: 100px; height: 120px; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; transform-origin: center center; transition: 0.5s; transform: translate(-50%, -50%); }
+        .seat { 
+            position: absolute; width: 100px; height: 120px; 
+            display: flex; flex-direction: column; align-items: center; justify-content: flex-start; 
+            transform-origin: center center; transition: 0.5s; 
+            transform: translate(-50%, -50%);
+            z-index: 100; /* 強制最高層級 */
+            cursor: pointer;
+        }
         .seat-inner { transform: rotateX(-25deg); display: flex; flex-direction: column; align-items: center; cursor: pointer; width: 100%; position: relative; }
         
         .avatar-wrapper { position: relative; width: 65px; height: 65px; z-index: 2; }
-        .avatar { width: 100%; height: 100%; border-radius: 50%; background: #444; border: 3px solid #888; display: flex; align-items: center; justify-content: center; font-size: 2.2rem; box-shadow: 0 5px 15px rgba(0,0,0,0.6); overflow: hidden; transition: 0.3s; position: relative; }
+        .avatar { 
+            width: 100%; height: 100%; border-radius: 50%; background: #444; border: 3px solid #888; 
+            display: flex; align-items: center; justify-content: center; font-size: 2.2rem; 
+            box-shadow: 0 5px 15px rgba(0,0,0,0.6); overflow: hidden; transition: 0.3s; 
+            position: relative; 
+            cursor: pointer;
+        }
         .avatar:hover { transform: translateY(-5px); }
         .avatar.leader { border-color: var(--gold); box-shadow: 0 0 25px var(--gold); }
-        .avatar.in-team { border-color: var(--blue); box-shadow: 0 0 25px var(--blue); transform: scale(1.15); }
+        
         .avatar.kill-target { border-color: var(--red); box-shadow: 0 0 30px var(--red); animation: pulse 1s infinite; cursor: crosshair; }
         .avatar.ready { border-color: var(--green); box-shadow: 0 0 20px var(--green); }
-        /* [新增] 第一輪隊長選擇的皇冠 */
+        
+        /* 隊伍中的頭像亮起效果 */
+        @keyframes team-pulse {
+            0% { box-shadow: 0 0 15px var(--blue); }
+            50% { box-shadow: 0 0 35px var(--blue), 0 0 10px #fff; transform: scale(1.2); }
+            100% { box-shadow: 0 0 15px var(--blue); }
+        }
+        .avatar.in-team { 
+            border-color: var(--blue); 
+            animation: team-pulse 2s infinite; 
+            z-index: 10;
+        }
+
         .first-leader-crown {
             position: absolute; top: -35px; right: -15px; font-size: 20px; cursor: pointer;
             filter: grayscale(100%); opacity: 0.5; transition: 0.2s; z-index: 10;
@@ -134,18 +165,36 @@
 
         .name-tag { background: rgba(0,0,0,0.8); padding: 4px 10px; border-radius: 12px; margin-top: 8px; font-size: 0.85rem; border: 1px solid #555; color: #ddd; max-width: 90px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: center; }
 
-        .status-msg { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -120%) rotateX(-25deg); font-size: 1.8rem; text-shadow: 0 3px 8px black; text-align: center; width: 400px; pointer-events: none; z-index: 20; font-family: 'Cinzel', serif; }
-        .action-panel { position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%); display: flex; flex-direction:column; align-items:center; gap: 10px; z-index: 50; }
+        .status-msg { 
+            position: absolute; top: 50%; left: 50%; 
+            transform: translate(-50%, -120%) rotateX(-25deg); 
+            font-size: 1.8rem; text-shadow: 0 3px 8px black; text-align: center; width: 400px; 
+            pointer-events: none; z-index: 20; font-family: 'Cinzel', serif; 
+        }
+        
+        /* [修改] 動作面板：移至桌子中央 (top: 55%) 避免擋住下方 */
+        .action-panel { 
+            position: absolute; 
+            top: 55%; /* 移到中間 */
+            left: 50%; 
+            transform: translate(-50%, -50%); 
+            display: flex; flex-direction:column; align-items:center; gap: 10px; 
+            z-index: 50; 
+            pointer-events: none; 
+        }
         .selected-list { color: var(--gold); font-size: 1rem; margin-bottom: 5px; text-shadow: 0 2px 5px black; font-weight: bold; }
         .btn-group { display: flex; gap: 25px; }
         
-        .action-btn { padding: 15px 40px; font-size: 1.2rem; border-radius: 50px; border: none; font-weight: bold; cursor: pointer; box-shadow: 0 10px 20px rgba(0,0,0,0.6); transition: 0.2s; font-family: 'Cinzel', serif; text-transform: uppercase; }
+        .action-btn { 
+            padding: 15px 40px; font-size: 1.2rem; border-radius: 50px; border: none; font-weight: bold; cursor: pointer; box-shadow: 0 10px 20px rgba(0,0,0,0.6); transition: 0.2s; font-family: 'Cinzel', serif; text-transform: uppercase; 
+            pointer-events: auto; 
+        }
         .action-btn:disabled { filter: grayscale(1); opacity: 0.6; cursor: not-allowed; transform: none; }
         .btn-approve { background: linear-gradient(to bottom, #66bb6a, #43a047); color: white; border: 2px solid #2e7d32; }
         .btn-reject { background: linear-gradient(to bottom, #ef5350, #e53935); color: white; border: 2px solid #c62828; }
         .action-btn:hover:not(:disabled) { transform: translateY(-3px) scale(1.05); filter: brightness(1.1); }
         
-        /* [修改] 聊天室：灰底 (#333) 白字 */
+        /* 聊天室 */
         .chat-container { 
             position: absolute; bottom: 20px; left: 20px; 
             width: 350px; height: 400px; 
@@ -168,20 +217,18 @@
 
         .bottom-right-container { position: absolute; bottom: 20px; right: 20px; display: flex; align-items: flex-end; gap: 10px; z-index: 50; }
         
-        /* [修改] 筆記本：左側空隙 20px (right: 170+20=190?? No, right: 150+20 = 170) */
-        /* 身分牌寬 150 + right 20 = 170px 邊界 */
-        /* 所以筆記本從 right: 190px 開始 */
+        /* 筆記本 */
         .notepad { 
-            position: absolute; bottom: 20px; right: 190px;
-            width: 200px; height: 360px; /* 高度與身分牌切齊 */
+            position: absolute; bottom: 5px; right: 160px;
+            width: 200px; height: 360px; 
             background: var(--parchment); color: #3e2723; border: 4px solid #4e342e; border-radius: 5px; padding: 10px; display: flex; flex-direction: column; transition: 0.3s; box-shadow: 0 5px 15px black; z-index: 50;
         }
         .notepad textarea { width: 100%; height: 100%; background: transparent; border: none; color: #3e2723; resize: none; font-family: 'Noto Sans TC', monospace; outline: none; font-size: 0.9rem; font-weight: bold; }
         .notepad-title { font-size: 0.8rem; color: #5d4037; margin-bottom: 5px; border-bottom: 1px solid #a1887f; font-weight: bold;}
         
-        /* [修改] 身分牌：緊貼右側 (right: 20px) */
+        /* 身分牌 */
         .card-container { 
-            position: absolute; bottom: 20px; right: 20px;
+            position: absolute; bottom: 5px; right: 5px;
             width: 150px; height: 360px; 
             perspective: 1000px; cursor: pointer; z-index: 50; 
         }
@@ -257,7 +304,9 @@
         <div class="top-bar">
             <div class="quest-track">
                 <div v-for="(res, i) in questResults" :key="i" class="token" :class="{success: res===true, fail: res===false, active: i===questIdx}">
-                    <span v-if="res===null" style="color: #666;">{{i+1}}</span>
+                    <span v-if="res===true" style="font-size: 2rem;">🏆</span>
+                    <span v-else-if="res===false" style="font-size: 2rem;">🍷</span>
+                    <span v-else style="color: #666;">{{i+1}}</span>
                 </div>
             </div>
             <div class="vote-track">提案失敗次數<br><span v-for="n in 5" class="vote-dot" :class="{filled: n <= voteTrack}"></span></div>
@@ -305,6 +354,10 @@
                         {{ isMeReady ? '取消準備 (已就緒)' : '點擊準備' }}
                     </button>
                 </div>
+                
+                <div class="rule-hint" v-if="state === 'LOBBY' && isMeHost">
+                    👑 房主可點擊皇冠指定第一輪隊長，之後順時鐘輪替
+                </div>
 
                 <div class="status-msg" v-if="state !== 'LOBBY'">
                     <div v-if="state === 'TEAM_SELECTION'"><span style="color:var(--gold)">{{getLeaderName()}}</span><br>正在挑選隊員<div style="font-size:1rem; margin-top:5px; color:#aaa; font-family:sans-serif">(需選 {{teamSizeNeeded}} 人)</div></div>
@@ -316,9 +369,17 @@
                 <div v-for="(p, index) in activePlayers" :key="p.token" class="seat" :class="{disconnected: !p.is_connected}" :style="getSeatStyle(index, activePlayers.length)">
                     <div class="seat-inner">
                         <div class="avatar-wrapper">
-                            <div class="avatar" :class="{leader: p.is_leader, 'in-team': p.in_team, 'kill-target': isAssassinationPhase && isMeAssassin && p.token !== myToken, 'ready': p.is_ready}" @click="handleAvatarClick(p)">
+                            <div class="avatar" 
+                                 :class="{
+                                     leader: p.is_leader, 
+                                     'in-team': p.in_team || (state === 'TEAM_SELECTION' && isMeLeader && mySelectedTeam.includes(p.token)),
+                                     'kill-target': isAssassinationPhase && isMeAssassin && p.token !== myToken, 
+                                     'ready': p.is_ready
+                                 }" 
+                                 @click="handleAvatarClick(p)">
                                 {{ p.avatar }}
                             </div>
+                            
                             <div class="first-leader-crown" 
                                  v-if="state === 'LOBBY' && isMeHost" 
                                  :class="{selected: p.is_first_leader}"
@@ -560,7 +621,7 @@
             const hostStartGame = () => socket.emit('host_start_game', roomId.value);
             const requestReset = () => { if(!hasResetVoted.value) socket.emit('request_reset', roomId.value); };
             const updateSettings = () => { if(isMeHost.value) socket.emit('update_settings', { room_id: roomId.value, settings: localSettings }); };
-            const setFirstLeader = (token) => { if(isMeHost.value) socket.emit('set_first_leader', { room_id: roomId.value, target_token: token }); }; // [新增]
+            const setFirstLeader = (token) => { if(isMeHost.value) socket.emit('set_first_leader', { room_id: roomId.value, target_token: token }); }; 
             const sendChat = () => { if(chatInput.value.trim()){ socket.emit('send_chat', {room_id: roomId.value, message: chatInput.value}); chatInput.value = ''; }};
             const kickPlayer = (targetToken) => { if(confirm("確定要踢出此玩家嗎？")) socket.emit('kick_player', {room_id: roomId.value, target_token: targetToken}); };
             const toggleTeam = (token) => {
@@ -582,12 +643,15 @@
             const showToast = (msg) => { toastMsg.value = msg; setTimeout(() => toastMsg.value = '', 3000); };
             const isBadRole = (r) => ['刺客','莫甘娜','壞人','莫德雷德'].includes(r);
             const getLeaderName = () => players.value.find(p => p.is_leader)?.name || '';
+            
+            // [修正] 座位排列：讓自己位於右下角 (45度/PI*0.25) 避開中間
             const getSeatStyle = (index, total) => {
                 const myIndex = activePlayers.value.findIndex(p => p.token === myToken.value);
                 let relativeIndex = index;
                 const baseIndex = myIndex !== -1 ? myIndex : 0;
                 relativeIndex = (index - baseIndex + total) % total;
-                const angle = (relativeIndex / total) * 2 * Math.PI + Math.PI/2;
+                // PI/2 = 底部 (6點鐘), PI/4 = 右下 (4-5點鐘)
+                const angle = (relativeIndex / total) * 2 * Math.PI + Math.PI * 0.25; 
                 const radiusX = 45; 
                 const radiusY = 35;
                 const x = Math.cos(angle) * radiusX + 50; 
@@ -603,7 +667,7 @@
                 getRoleDesc, hostStartGame, revealedRoles, isProcessing, selectedPlayerNames,
                 join, toggleReady, requestReset, updateSettings, kickPlayer, handleAvatarClick, submitTeam, voteTeam, voteMission, sendChat,
                 isMeLeader, mySelectedTeam, amIInTeam, iHaveVoted, isBadRole, getLeaderName, getSeatStyle, 
-                toastMsg, isAssassinationPhase, isMeAssassin, roleImages, setFirstLeader // [新增]
+                toastMsg, isAssassinationPhase, isMeAssassin, roleImages, setFirstLeader 
             };
         }
     }).mount('#app');
