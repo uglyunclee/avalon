@@ -16,15 +16,14 @@ app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True, 
 app_asgi = socketio.ASGIApp(sio, app)
 app.mount("/", StaticFiles(directory=".", html=True), name="static")
 
-# === 遊戲平衡設定 (1人測試) ===
+# === 遊戲平衡設定 ===
 BALANCE_CONFIG = {
     1: (1, 0), 2: (1, 1), 3: (2, 1), 4: (3, 1),
     5: (3, 2), 6: (4, 2), 7: (4, 3),
     8: (5, 3), 9: (6, 3), 10: (6, 4)
 }
 QUEST_CONFIG = {
-    1: [1, 1, 1, 1, 1],
-    2: [1, 1, 1, 1, 1], 3: [1, 2, 1, 2, 2], 4: [2, 2, 2, 3, 3],
+    1: [1, 1, 1, 1, 1], 2: [1, 1, 1, 1, 1], 3: [1, 2, 1, 2, 2], 4: [2, 2, 2, 3, 3],
     5: [2, 3, 2, 3, 3], 6: [2, 3, 4, 3, 4], 7: [2, 3, 3, 4, 4],
     8: [3, 4, 4, 5, 5], 9: [3, 4, 4, 5, 5], 10: [3, 4, 4, 5, 5],
 }
@@ -65,6 +64,7 @@ async def broadcast_state(room_id):
     players_list = []
 
     active_tokens = [k for k, v in room['players'].items() if v['role'] != 'spectator']
+    # 確保順序固定 (依照加入時間)，這樣順時鐘才有意義
     sorted_tokens = sorted(active_tokens, key=lambda t: room['players'][t]['join_time'])
 
     for idx, token in enumerate(sorted_tokens):
@@ -78,6 +78,7 @@ async def broadcast_state(room_id):
         players_list.append({
             'token': token, 'name': p['name'], 'avatar': p['avatar'],
             'is_leader': idx == room['leader_index'],
+            'is_first_leader': token == room.get('first_leader_token'),  # [新增] 標記誰是第一輪隊長
             'in_team': token in room['current_team'],
             'has_voted': has_voted, 'is_connected': p['connected'],
             'has_reset_voted': token in room['reset_votes'],
@@ -124,6 +125,7 @@ async def join_room(sid, data):
             'quest_results': [None] * 5, 'quest_index': 0, 'leader_index': 0,
             'current_team': [], 'votes': {}, 'mission_votes': [], 'mission_votes_who': [],
             'vote_track': 0, 'chat_history': [], 'reset_votes': set(), 'game_history': [],
+            'first_leader_token': None,  # [新增] 儲存指定的第一隊長
             'settings': {'merlin': True, 'percival': True, 'assassin': True, 'morgana': True, 'mordred': False,
                          'oberon': False}
         }
@@ -152,6 +154,10 @@ async def join_room(sid, data):
                                       'join_time': datetime.now().timestamp(), 'connected': True, 'is_ready': False}
         room['sid_map'][sid] = new_token
         await sio.enter_room(sid, room_id)
+
+        # 預設第一位加入者為首輪隊長
+        if not room['first_leader_token'] and not is_spectator:
+            room['first_leader_token'] = new_token
 
         if is_spectator:
             await sio.emit('join_success', {'token': new_token, 'is_spectator': True}, to=sid)
@@ -186,6 +192,7 @@ async def kick_player(sid, data):
     if target_p['connected']: await sio.emit('kicked', {'msg': '你已被房主踢出房間'}, to=target_p['sid'])
     del room['players'][target_token]
     if target_p['sid'] in room['sid_map']: del room['sid_map'][target_p['sid']]
+    if room['first_leader_token'] == target_token: room['first_leader_token'] = None  # 重置隊長
     await add_log(room_id, f"🚫 {target_p['name']} 被房主踢出", "red")
     await broadcast_state(room_id)
 
@@ -198,6 +205,18 @@ async def update_settings(sid, data):
     if not room or room['state'] != GameState.LOBBY: return
     if room['sid_map'].get(sid) != get_host_token(room): return
     room['settings'] = new_settings
+    await broadcast_state(room_id)
+
+
+# [新增] 設定第一輪隊長
+@sio.event
+async def set_first_leader(sid, data):
+    room_id = data['room_id'];
+    target_token = data['target_token']
+    room = rooms.get(room_id)
+    if not room or room['state'] != GameState.LOBBY: return
+    if room['sid_map'].get(sid) != get_host_token(room): return  # 只有房主能設
+    room['first_leader_token'] = target_token
     await broadcast_state(room_id)
 
 
@@ -230,6 +249,8 @@ async def start_game_logic(room_id):
     cnt = len(players_objs)
     settings = room['settings']
     target_good, target_evil = BALANCE_CONFIG.get(cnt, (1, 0))
+
+    # 分配角色
     final_roles = []
     if settings['merlin']: final_roles.append("梅林")
     if settings['percival']: final_roles.append("派西維爾")
@@ -244,13 +265,20 @@ async def start_game_logic(room_id):
     if len(final_roles) > cnt: final_roles = final_roles[:cnt]
     while len(final_roles) < cnt: final_roles.append("忠臣")
     random.shuffle(final_roles)
+
     room['reset_votes'] = set();
     room['state'] = GameState.TEAM_SELECTION
-    room['quest_index'] = 0;
-    room['leader_index'] = 0
+    room['quest_index'] = 0
     room['quest_results'] = [None] * 5;
     room['vote_track'] = 0
     room['game_history'] = []
+
+    # [新增] 設定第一輪隊長
+    if room.get('first_leader_token') and room['first_leader_token'] in sorted_tokens:
+        room['leader_index'] = sorted_tokens.index(room['first_leader_token'])
+    else:
+        room['leader_index'] = 0  # 預設第一位
+
     for i, p_obj in enumerate(players_objs): p_obj['role'] = final_roles[i]
     for p_obj in players_objs: await send_role_info(p_obj['sid'], p_obj, players_objs)
     await add_log(room_id, f"🎲 本局身分牌: {', '.join(set(final_roles))}", "cyan")
@@ -321,6 +349,7 @@ async def vote_team(sid, data):
         rejects = list(room['votes'].values()).count(False);
         passed = approves > rejects
         active_tokens = [k for k, v in room['players'].items() if v['role'] != 'spectator']
+        # 這裡也要確保順序一致
         sorted_tokens = sorted(active_tokens, key=lambda t: room['players'][t]['join_time'])
         leader_token = sorted_tokens[room['leader_index']]
         leader_name = room['players'][leader_token]['name']
@@ -338,6 +367,7 @@ async def vote_team(sid, data):
             room['current_history_entry'] = history_entry
             await add_log(room_id, f"✅ 通過 ({approves} vs {rejects})", "#66ff66")
         else:
+            # 順時鐘換人: index + 1
             room['vote_track'] += 1;
             room['leader_index'] = (room['leader_index'] + 1) % active_players_count;
             room['state'] = GameState.TEAM_SELECTION
@@ -375,9 +405,12 @@ async def vote_mission(sid, data):
         log_icon = "🏆 聖杯" if is_success else "🍷 汙杯"
         log_color = "gold" if is_success else "red"
         await add_log(room_id, f"🏁 R{room['quest_index'] + 1}: {log_icon} ({fail_count} 汙)", log_color)
+
+        # 順時鐘換人
         room['quest_index'] += 1;
         room['leader_index'] = (room['leader_index'] + 1) % active_players_count;
         room['state'] = GameState.TEAM_SELECTION
+
         wins = room['quest_results'].count(True);
         losses = room['quest_results'].count(False)
         if wins >= 3:
@@ -428,6 +461,7 @@ async def request_reset(sid, room_id):
             room['vote_track'] = 0;
             room['reset_votes'] = set();
             room['game_history'] = []
+            room['first_leader_token'] = None  # 重置
             for t in room['players']:
                 if room['players'][t]['role'] != 'spectator':
                     room['players'][t]['role'] = None
