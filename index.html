@@ -52,7 +52,7 @@
         .room-info-badge { background: rgba(41, 182, 246, 0.2); border: 1px solid var(--blue); color: var(--blue); padding: 5px 10px; border-radius: 5px; font-size: 0.9rem; text-align: center; margin-bottom: 5px; font-weight: bold; }
 
         .table-container { 
-            position: absolute; top: 45%; left: 50%; /* 桌子上移 */
+            position: absolute; top: 45%; left: 50%; 
             transform: translate(-50%, -50%) rotateX(25deg); 
             width: 90vh; height: 75vh; 
             transform-style: preserve-3d; 
@@ -81,7 +81,7 @@
         }
         .ready-toggle-btn.is-ready { background: var(--green); color: white; border-color: #fff; box-shadow: 0 0 20px var(--green); }
         .ready-toggle-btn.is-ready:hover { background: #43a047; }
-        .ready-toggle-btn:hover { transform: scale(1.05); filter: brightness(1.1); }
+        .ready-toggle-btn.is-ready:hover { transform: scale(1.05); filter: brightness(1.1); }
 
         .start-game-btn {
             padding: 12px 20px; border-radius: 30px; font-weight: bold; cursor: pointer;
@@ -118,7 +118,7 @@
             display: flex; flex-direction: column; align-items: center; justify-content: flex-start; 
             transform-origin: center center; transition: 0.5s; 
             transform: translate(-50%, -50%);
-            z-index: 100; /* 強制最高層級 */
+            z-index: 2000; 
             cursor: pointer;
         }
         .seat-inner { transform: rotateX(-25deg); display: flex; flex-direction: column; align-items: center; cursor: pointer; width: 100%; position: relative; }
@@ -139,14 +139,14 @@
         
         /* 隊伍中的頭像亮起效果 */
         @keyframes team-pulse {
-            0% { box-shadow: 0 0 15px var(--blue); }
-            50% { box-shadow: 0 0 35px var(--blue), 0 0 10px #fff; transform: scale(1.2); }
-            100% { box-shadow: 0 0 15px var(--blue); }
+            0% { box-shadow: 0 0 15px var(--blue); border-color: var(--blue); }
+            50% { box-shadow: 0 0 35px var(--blue), 0 0 10px #fff; border-color: #fff; transform: scale(1.2); }
+            100% { box-shadow: 0 0 15px var(--blue); border-color: var(--blue); }
         }
         .avatar.in-team { 
-            border-color: var(--blue); 
             animation: team-pulse 2s infinite; 
             z-index: 10;
+            border: 3px solid var(--blue);
         }
 
         .first-leader-crown {
@@ -172,28 +172,49 @@
             pointer-events: none; z-index: 20; font-family: 'Cinzel', serif; 
         }
         
-        /* [修改] 動作面板：移至桌子中央 (top: 55%) 避免擋住下方 */
         .action-panel { 
             position: absolute; 
-            top: 55%; /* 移到中間 */
+            top: 55%; 
             left: 50%; 
             transform: translate(-50%, -50%); 
             display: flex; flex-direction:column; align-items:center; gap: 10px; 
             z-index: 50; 
-            pointer-events: none; 
+            pointer-events: auto; 
         }
         .selected-list { color: var(--gold); font-size: 1rem; margin-bottom: 5px; text-shadow: 0 2px 5px black; font-weight: bold; }
-        .btn-group { display: flex; gap: 25px; }
+        .btn-group { display: flex; gap: 25px; justify-content: center; }
         
         .action-btn { 
             padding: 15px 40px; font-size: 1.2rem; border-radius: 50px; border: none; font-weight: bold; cursor: pointer; box-shadow: 0 10px 20px rgba(0,0,0,0.6); transition: 0.2s; font-family: 'Cinzel', serif; text-transform: uppercase; 
-            pointer-events: auto; 
         }
         .action-btn:disabled { filter: grayscale(1); opacity: 0.6; cursor: not-allowed; transform: none; }
         .btn-approve { background: linear-gradient(to bottom, #66bb6a, #43a047); color: white; border: 2px solid #2e7d32; }
         .btn-reject { background: linear-gradient(to bottom, #ef5350, #e53935); color: white; border: 2px solid #c62828; }
         .action-btn:hover:not(:disabled) { transform: translateY(-3px) scale(1.05); filter: brightness(1.1); }
         
+        /* 聖杯/髒杯 卡牌式按鈕 */
+        .mission-btn {
+            width: 140px; height: 200px;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            border-radius: 15px; border: 4px solid; cursor: pointer;
+            transition: 0.3s; box-shadow: 0 10px 25px rgba(0,0,0,0.8);
+            background: #222; text-align: center;
+            position: relative; z-index: 3000; /* [關鍵] 確保比其他元素高 */
+        }
+        .mission-btn:hover { transform: translateY(-10px) scale(1.05); }
+        .btn-mission-success {
+            border-color: #29b6f6;
+            background: linear-gradient(135deg, #0d47a1, #1e88e5);
+            color: white;
+        }
+        .btn-mission-fail {
+            border-color: #ef5350;
+            background: linear-gradient(135deg, #b71c1c, #e53935);
+            color: white;
+        }
+        .m-icon { font-size: 4rem; margin-bottom: 10px; filter: drop-shadow(0 0 10px rgba(255,255,255,0.5)); }
+        .m-text { font-size: 1.2rem; font-weight: bold; font-family: 'Noto Sans TC', sans-serif; }
+
         /* 聊天室 */
         .chat-container { 
             position: absolute; bottom: 20px; left: 20px; 
@@ -257,6 +278,34 @@
         .vote-no { color: red; font-weight: bold; }
         .close-btn { margin-top: 15px; background: #5d4037; color: white; border: none; padding: 8px 20px; cursor: pointer; border-radius: 5px; }
         .toast { position: fixed; top: 15%; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.95); padding: 15px 40px; border-radius: 50px; border: 2px solid var(--gold); color: var(--gold); font-size: 1.4rem; animation: fadeInOut 3s forwards; z-index: 300; pointer-events: none; white-space: nowrap; }
+
+        /* [新增] 隊員徵選清單 */
+        .selector-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8); z-index: 3000;
+            display: flex; justify-content: center; align-items: center;
+        }
+        .selector-panel {
+            width: 400px; max-height: 80vh; overflow-y: auto; padding: 20px;
+            background: var(--parchment); color: #3e2723; border: 8px solid #4e342e; border-radius: 10px;
+        }
+        .selector-header { font-size: 1.5rem; font-weight: bold; text-align: center; margin-bottom: 15px; border-bottom: 2px solid #5d4037; padding-bottom: 10px; }
+        .player-list { display: flex; flex-direction: column; gap: 8px; }
+        .player-row {
+            display: flex; align-items: center; padding: 10px;
+            background: rgba(141, 110, 99, 0.1); border: 1px solid #a1887f; border-radius: 5px;
+            cursor: pointer; transition: 0.2s;
+        }
+        .player-row:hover { background: rgba(141, 110, 99, 0.2); }
+        .player-row.selected { background: rgba(0, 100, 0, 0.15); border-color: green; box-shadow: 0 0 5px green; }
+        .p-avatar { font-size: 1.5rem; margin-right: 10px; }
+        .p-name { font-weight: bold; flex: 1; }
+        .p-check { font-size: 1.2rem; color: green; font-weight: bold; }
+        .btn-row { display: flex; justify-content: space-between; margin-top: 20px; gap: 10px; }
+        .sel-btn { flex: 1; padding: 10px; border-radius: 5px; border: none; font-weight: bold; cursor: pointer; }
+        .sel-close { background: #8d6e63; color: white; }
+        .sel-confirm { background: var(--gold); color: black; }
+        .sel-confirm:disabled { filter: grayscale(1); opacity: 0.5; cursor: not-allowed; }
     </style>
 </head>
 <body>
@@ -266,6 +315,23 @@
 </div>
 
 <div id="app" v-cloak>
+    <div v-if="showTeamSelector" class="selector-overlay">
+        <div class="selector-panel">
+            <div class="selector-header">📋 徵選遠征隊員 ({{mySelectedTeam.length}}/{{teamSizeNeeded}})</div>
+            <div class="player-list">
+                <div v-for="p in activePlayers" :key="p.token" @click="toggleTeam(p.token)" class="player-row" :class="{selected: mySelectedTeam.includes(p.token)}">
+                    <span class="p-avatar">{{p.avatar}}</span>
+                    <span class="p-name">{{p.name}} <span v-if="p.token === myToken">(我)</span></span>
+                    <span v-if="mySelectedTeam.includes(p.token)" class="p-check">✅</span>
+                </div>
+            </div>
+            <div class="btn-row">
+                <button class="sel-btn sel-close" @click="showTeamSelector = false">👀 暫時關閉 (看桌子)</button>
+                <button class="sel-btn sel-confirm" :disabled="mySelectedTeam.length !== teamSizeNeeded" @click="confirmAndSubmit">🚀 確認提案</button>
+            </div>
+        </div>
+    </div>
+
     <div id="login" v-if="!joined">
         <div class="login-box">
             <h1>AVALON</h1>
@@ -360,8 +426,11 @@
                 </div>
 
                 <div class="status-msg" v-if="state !== 'LOBBY'">
-                    <div v-if="state === 'TEAM_SELECTION'"><span style="color:var(--gold)">{{getLeaderName()}}</span><br>正在挑選隊員<div style="font-size:1rem; margin-top:5px; color:#aaa; font-family:sans-serif">(需選 {{teamSizeNeeded}} 人)</div></div>
-                    <div v-if="state === 'TEAM_VOTING'">全員投票中...</div>
+                    <div v-if="state === 'TEAM_SELECTION'">
+                        <span style="color:var(--gold)">{{getLeaderName()}}</span><br>正在挑選隊員
+                        <div style="font-size:1rem; margin-top:5px; color:#aaa; font-family:sans-serif">(需選 {{teamSizeNeeded}} 人)</div>
+                    </div>
+                    <div v-if="state === 'TEAM_VOTING'">請投票決定是否讓此隊伍出發</div>
                     <div v-if="state === 'MISSION'">隊伍執行任務中...</div>
                     <div v-if="state === 'ASSASSINATION'" style="color:var(--red);">刺殺環節！<br><span style="font-size: 1rem">刺客請點擊頭像</span></div>
                     <div v-if="state === 'GAME_OVER'" style="color:var(--gold); font-size:2.5rem;">遊戲結束</div>
@@ -408,23 +477,30 @@
         </div>
         
         <div class="action-panel" v-if="!isSpectator && state !== 'LOBBY'">
-            <div class="selected-list" v-if="(state === 'TEAM_SELECTION' && isMeLeader) || (isAssassinationPhase && isMeAssassin)">
-                目前已選: {{ selectedPlayerNames.length ? selectedPlayerNames.join(', ') : '無' }}
+            <div v-if="state === 'TEAM_SELECTION' && isMeLeader">
+                <button class="action-btn btn-gold" @click="showTeamSelector = true">
+                    📋 開啟徵選名單 ({{mySelectedTeam.length}}/{{teamSizeNeeded}})
+                </button>
             </div>
 
             <div class="btn-group">
-                <div v-if="state === 'TEAM_SELECTION' && isMeLeader">
-                    <button class="action-btn btn-gold" :disabled="mySelectedTeam.length !== teamSizeNeeded || isProcessing" @click="submitTeam">
-                        {{ isProcessing ? '送出中...' : '確認提案' }} ({{mySelectedTeam.length}}/{{teamSizeNeeded}})
-                    </button>
+                <div v-if="state === 'TEAM_SELECTION' && isMeLeader && showTeamSelector === false && mySelectedTeam.length === teamSizeNeeded">
+                     <button class="action-btn btn-gold" @click="submitTeam">確認提案 (進入投票)</button>
                 </div>
+
                 <div v-if="state === 'TEAM_VOTING' && !iHaveVoted">
                     <button class="action-btn btn-approve" :disabled="isProcessing" @click="voteTeam(true)">⭕ 贊成</button>
                     <button class="action-btn btn-reject" :disabled="isProcessing" @click="voteTeam(false)">❌ 反對</button>
                 </div>
-                <div v-if="state === 'MISSION' && amIInTeam && !iHaveVoted">
-                    <button class="action-btn btn-approve" :disabled="isProcessing" @click="voteMission(true)">🏆 聖杯 (成功)</button>
-                    <button class="action-btn btn-reject" :disabled="isProcessing" @click="voteMission(false)">🍷 汙杯 (失敗)</button>
+                <div v-if="state === 'MISSION' && amIInTeam && !iHaveVoted" style="display:flex; gap:20px;">
+                    <div class="mission-btn btn-mission-success" @click="!isProcessing && voteMission(true)">
+                        <div class="m-icon">🏆</div>
+                        <div class="m-text">聖杯 (成功)</div>
+                    </div>
+                    <div class="mission-btn btn-mission-fail" @click="!isProcessing && voteMission(false)">
+                        <div class="m-icon">🍷</div>
+                        <div class="m-text">汙杯 (失敗)</div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -522,6 +598,7 @@
             const isSpectator = ref(false); const hostToken = ref('');
             const revealedRoles = ref({});
             const isProcessing = ref(false);
+            const showTeamSelector = ref(false); 
 
             const roleImages = {
                 '梅林': 'img/merlin.jpg', '派西維爾': 'img/percival.jpg', '刺客': 'img/assassin.jpg',
@@ -577,6 +654,7 @@
                     if (data.state === 'LOBBY') { 
                         myRole.value = ''; cardFlipped.value = false; revealedRoles.value = {}; 
                         isProcessing.value = false;
+                        showTeamSelector.value = false;
                     }
                 });
                 socket.on('role_info', (data) => { myRole.value = data.role; teammates.value = data.teammates; cardFlipped.value = true; setTimeout(() => cardFlipped.value = false, 4000); });
@@ -624,18 +702,25 @@
             const setFirstLeader = (token) => { if(isMeHost.value) socket.emit('set_first_leader', { room_id: roomId.value, target_token: token }); }; 
             const sendChat = () => { if(chatInput.value.trim()){ socket.emit('send_chat', {room_id: roomId.value, message: chatInput.value}); chatInput.value = ''; }};
             const kickPlayer = (targetToken) => { if(confirm("確定要踢出此玩家嗎？")) socket.emit('kick_player', {room_id: roomId.value, target_token: targetToken}); };
+            
             const toggleTeam = (token) => {
                 if(state.value !== 'TEAM_SELECTION' || !isMeLeader.value) return;
                 if(mySelectedTeam.value.includes(token)) mySelectedTeam.value = mySelectedTeam.value.filter(t => t !== token);
                 else if(mySelectedTeam.value.length < teamSizeNeeded.value) mySelectedTeam.value.push(token);
             };
+            
             const handleAvatarClick = (player) => {
-                if (state.value === 'TEAM_SELECTION') toggleTeam(player.token);
-                else if (state.value === 'ASSASSINATION' && myRole.value === '刺客' && player.token !== myToken.value) {
+                // [修改] 只有刺殺階段點頭像才有效，選人改用清單
+                if (state.value === 'ASSASSINATION' && myRole.value === '刺客' && player.token !== myToken.value) {
                     if(confirm(`確定要刺殺 ${player.name} 嗎？`)) socket.emit('assassinate', { room_id: roomId.value, target_token: player.token });
                 }
             };
             
+            const confirmAndSubmit = () => {
+                submitTeam();
+                showTeamSelector.value = false;
+            }
+
             const submitTeam = () => { isProcessing.value = true; socket.emit('select_team', {room_id: roomId.value, team: mySelectedTeam.value}); };
             const voteTeam = (v) => { isProcessing.value = true; socket.emit('vote_team', {room_id: roomId.value, vote: v}); };
             const voteMission = (v) => { isProcessing.value = true; socket.emit('vote_mission', {room_id: roomId.value, result: v}); };
@@ -643,15 +728,12 @@
             const showToast = (msg) => { toastMsg.value = msg; setTimeout(() => toastMsg.value = '', 3000); };
             const isBadRole = (r) => ['刺客','莫甘娜','壞人','莫德雷德'].includes(r);
             const getLeaderName = () => players.value.find(p => p.is_leader)?.name || '';
-            
-            // [修正] 座位排列：讓自己位於右下角 (45度/PI*0.25) 避開中間
             const getSeatStyle = (index, total) => {
                 const myIndex = activePlayers.value.findIndex(p => p.token === myToken.value);
                 let relativeIndex = index;
                 const baseIndex = myIndex !== -1 ? myIndex : 0;
                 relativeIndex = (index - baseIndex + total) % total;
-                // PI/2 = 底部 (6點鐘), PI/4 = 右下 (4-5點鐘)
-                const angle = (relativeIndex / total) * 2 * Math.PI + Math.PI * 0.25; 
+                const angle = (relativeIndex / total) * 2 * Math.PI + Math.PI/2;
                 const radiusX = 45; 
                 const radiusY = 35;
                 const x = Math.cos(angle) * radiusX + 50; 
@@ -667,7 +749,7 @@
                 getRoleDesc, hostStartGame, revealedRoles, isProcessing, selectedPlayerNames,
                 join, toggleReady, requestReset, updateSettings, kickPlayer, handleAvatarClick, submitTeam, voteTeam, voteMission, sendChat,
                 isMeLeader, mySelectedTeam, amIInTeam, iHaveVoted, isBadRole, getLeaderName, getSeatStyle, 
-                toastMsg, isAssassinationPhase, isMeAssassin, roleImages, setFirstLeader 
+                toastMsg, isAssassinationPhase, isMeAssassin, roleImages, setFirstLeader, showTeamSelector, toggleTeam, confirmAndSubmit, voteMission
             };
         }
     }).mount('#app');
