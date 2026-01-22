@@ -48,10 +48,6 @@ async def add_log(room_id, message, color='white', type='system'):
     await sio.emit('new_message', msg_data, room=room_id)
 
 
-async def play_sound(room_id, sound_name):
-    await sio.emit('play_sound', {'name': sound_name}, room=room_id)
-
-
 def get_host_token(room):
     active_candidates = [p for p in room['players'].values() if p['connected'] and p['role'] != 'spectator']
     if not active_candidates: return None
@@ -322,7 +318,6 @@ async def select_team(sid, data):
     room['current_team'] = team_tokens;
     room['state'] = GameState.TEAM_VOTING;
     room['votes'] = {}
-    await play_sound(room_id, 'vote')
     await broadcast_state(room_id)
 
 
@@ -362,7 +357,6 @@ async def vote_team(sid, data):
             room['leader_index'] = (room['leader_index'] + 1) % active_players_count;
             room['state'] = GameState.TEAM_SELECTION
             room['game_history'].append(history_entry)
-            await play_sound(room_id, 'fail');
             await add_log(room_id, f"⚠️ 否決 ({approves} vs {rejects}) - 失敗: {room['vote_track']}", "#ff6666")
             if room['vote_track'] >= 5: await add_log(room_id, "💀 5次流局，壞人勝！", "red"); room[
                 'state'] = GameState.GAME_OVER; await sio.emit('game_over', {'winner': 'RED (流局)'}, room=room_id)
@@ -378,7 +372,6 @@ async def vote_mission(sid, data):
     if token in room['current_team'] and token not in room['mission_votes_who']: room['mission_votes'].append(result);
     room['mission_votes_who'].append(token)
     if len(room['mission_votes']) == len(room['current_team']):
-        # [修改] 移除所有動畫與延遲，直接計算與廣播
         fail_count = room['mission_votes'].count(False);
         is_fail = fail_count >= 1
         active_players_count = len([p for p in room['players'].values() if p['role'] != 'spectator'])
@@ -392,8 +385,7 @@ async def vote_mission(sid, data):
             del room['current_history_entry']
         room['quest_results'][room['quest_index']] = is_success
 
-        await sio.emit('mission_effect', {'success': is_success}, room=room_id);
-        await play_sound(room_id, 'success' if is_success else 'fail')
+        await sio.emit('mission_effect', {'success': is_success}, room=room_id)
         log_icon = "🏆 聖杯" if is_success else "🍷 汙杯"
         log_color = "gold" if is_success else "red"
         await add_log(room_id, f"🏁 R{room['quest_index'] + 1}: {log_icon} ({fail_count} 汙)", log_color)
